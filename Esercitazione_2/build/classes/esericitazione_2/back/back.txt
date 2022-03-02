@@ -1,0 +1,145 @@
+ls
+
+public class MatriceSparsa {
+
+
+	private class Elem{
+		int i;
+		int j;
+		int x;
+		Elem next;
+		
+		
+	}
+	
+	
+	private int m;
+	private int n;
+	Elem head;
+
+	public MatriceSparsa(int m, int n) {
+	
+		super();
+		this.m = m; this.n = n;
+		
+		head = new Elem();
+		
+	}
+
+	public int getNumRow() {
+		
+		return this.m;
+	}
+
+	public int getNumCol() {
+		
+		return this.n;
+		
+	}
+
+	public void set(int i, int j, int x) {
+		
+		
+		/*
+		if( i > this.m || j > this.n ){
+			return;
+		}
+		
+		Elem toPut = new Elem();
+		
+		Elem it = this.head;
+		
+		toPut.i = i;
+		toPut.j = j;
+		toPut.x = x;
+		toPut.next = null;
+		
+		
+		
+		
+		while(it.next != null){
+			
+			if(it.i == i && it.j == j){
+			
+				it.x = x;
+				return;
+			}
+			it = it.next; 
+		} 
+		
+		
+		
+		it.next  = toPut; 
+		*/
+		
+		
+		if(i >= this.m || j >= this.n){
+			System.out.println("Gli indici inseriti superano i limiti della matrice!");
+			return;
+		}
+
+		
+		Elem toPut = new Elem();
+		toPut.x = x;
+		toPut.i = i;
+		toPut.j = j;
+		toPut.next = null;
+
+		Elem it = this.head;
+
+		if(it == null || it.i > i || (it.i == i && it.j > j)) {
+			toPut.next = this.head;
+			this.head = toPut;
+			return;
+		}
+		if(it.i == i && it.j == j) {
+			it.x = x;
+			return;
+		}
+		while(it.next != null) {
+			if(it.i == i && it.j == j) {
+				it.x = x;
+				return;
+			}
+			if(it.next.i > i || (it.next.i ==i && it.next.j > j)) {
+				toPut.next = it.next;
+				it.next = toPut;
+				return;
+			}
+			it = it.next;
+		}
+		if(it.i == i && it.j == j) {
+			it.x = x;
+			return;
+		}
+		it.next = toPut;
+			
+	}
+
+	public int get(int i, int j) {
+		
+		
+		return 0;
+		
+	}
+
+	public String toString() {
+		// TODO: Implement here
+		return null;
+	}
+
+	public MatriceSparsa add(MatriceSparsa mat1, MatriceSparsa mat2) {
+		// TODO: Implement here
+		return null;
+	}
+
+	public MatriceSparsa tra(MatriceSparsa mat1, MatriceSparsa mat2) {
+		// TODO: Implement here
+		return null;
+	}
+
+	public MatriceSparsa mul(MatriceSparsa mat1, MatriceSparsa mat2) {
+		// TODO: Implement here
+		return null;
+	}
+}
