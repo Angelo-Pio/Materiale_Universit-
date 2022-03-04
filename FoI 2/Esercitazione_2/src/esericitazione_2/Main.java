@@ -2,7 +2,9 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Random;
 import java.util.StringTokenizer;
+
 
 public class Main {
 
@@ -26,8 +28,7 @@ public class Main {
 		mat1.set(10, 10, 7);
 		System.out.println(mat1);
 		System.out.println("");
-		System.out.println("Added -> 24,29,1");
-		mat1.set(24, 29, 1);
+		System.out.println("Added -> 24,29,1"); 
 		System.out.println(mat1);
 		System.out.println("");
 		System.out.println("Added -> 24,29,5");
@@ -38,6 +39,44 @@ public class Main {
 		mat1.set(18, 17, 12);
 		System.out.println(mat1);
 		System.out.println("");
+		
+		System.out.println("---------------SOMMA-----------------");
+		
+		MatriceSparsa mat2 = new MatriceSparsa(10,10);
+		
+		MatriceSparsa mat3 = new MatriceSparsa(10,10);
+		
+		Random rand = new Random();
+		
+		for(int i = 0; i < 10; i++){
+			for(int j = 0; j < 10 ; j++){
+	
+				mat2.set(i,j,rand.nextInt(51));
+				mat3.set(i,j,rand.nextInt(51));
+			}	
+		}
+		
+		System.out.println(mat2);
+		System.out.println(mat3);
+		
+		MatriceSparsa mat4 = new MatriceSparsa(10, 10);
+		
+		 mat4 = mat4.add(mat2,mat3);
+		
+		System.out.println(mat4);
+                
+                
+                MatriceSparsa mat5 = new MatriceSparsa(2, 19);
+                
+                mat4 = mat4.add(mat2,mat5);
+                
+               
+                
+		
+			
+		
+		
+		
 	}
 
 	private static MatriceSparsa readMatFF() {

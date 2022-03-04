@@ -24,7 +24,7 @@ public class MatriceSparsa {
 	
 	private int m;
 	private int n;
-	Elem head;
+	Elem head ;
 
 	public MatriceSparsa(int m, int n) {
 		super();
@@ -155,11 +155,11 @@ public class MatriceSparsa {
                     System.out.println("Addizione tra matrici non possibile");
                     return null;
                 }
-                
-                MatriceSparsa mat3 = new MatriceSparsa(mat1.getNumRow(), mat1.getNumCol());
+             
                 
                 Elem it = mat1.head;
-                Elem it3 = mat3.head;
+                
+                Elem it3 = this.head;
                 
                 while(it.next != null  ){
 
@@ -169,23 +169,22 @@ public class MatriceSparsa {
 
                         if(it.i == it2.i && it.j == it2.j){
 
-                            int value = mat1.head.x + mat2.head.x; 
-                            Elem put = new Elem(mat1.head.i,mat1.head.j,value,null);                        
-                            it3.next = put; 
+                            int value = it.x + it2.x; 
+                            this.set(it.i,it.j,value);
                             
-                            it3 = it3.next;
+                           
                         }
                         
                         it2 = it2.next;
 
                     }
                     
-                   
+                   it = it.next;
                     
                     
                 }
                 
-                return mat3;
+                return this;
 	}
 
 	public MatriceSparsa tra(MatriceSparsa mat1, MatriceSparsa mat2) {
@@ -197,5 +196,8 @@ public class MatriceSparsa {
 		// TODO: Implement here
 		return null;
 	}
+        
+        
+        
         
 }
