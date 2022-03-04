@@ -68,6 +68,7 @@ public class Main {
                 
                 MatriceSparsa mat5 = new MatriceSparsa(2, 19);
                 
+                
                 mat4 = mat4.add(mat2,mat5);
                 
                
