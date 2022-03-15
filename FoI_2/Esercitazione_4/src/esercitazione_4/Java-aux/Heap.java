@@ -3,6 +3,7 @@ import java.util.ArrayList;
 
 public class Heap {
 
+
     public enum HEAP_TYPE {MAX_HEAP, MIN_HEAP};
 
     public static class HeapEntry {
@@ -56,13 +57,27 @@ public class Heap {
 
     public HeapEntry add(int key) {
         
+
          HeapEntry e = new HeapEntry(key);
         heap.add(e); // aggiunge alla fine 
-        this.upheap(heap.size() - 1);
+        this.upheap(heap.size()-1);
         return e;
     }
     public static Heap array2heap(int[] array, HEAP_TYPE type) {
-        return null;
+        
+        Heap H = new Heap(type, array.length);
+        
+        for (int i = 0; i < array.length; i++) {
+            
+            H.heap.add(new HeapEntry(array[i]));
+            H.downHeap();
+        }
+        
+        
+        
+        
+        
+        return H;
     }
 
     public void print() {
@@ -74,6 +89,8 @@ public class Heap {
             HeapEntry e = this.heap.get(i);
             System.out.printf(" %d ", e.key);
         }
+        
+        System.out.printf("\n");
         
         
         return;
@@ -91,19 +108,25 @@ public class Heap {
     public void upheap(int i){
     
         while(i > 0){
-            
             int p = this.parent(i);
             
-            if(heap.get(i).key <= heap.get(p).key ){
-                return;
+            if(heap.get(i).key > heap.get(p).key ){
+                break;
             }
             
             this.swap(i,p);
             
             i = p;
-            i--;
         }
         
+    }
+    
+    private void downHeap() {
+        
+        
+        
+        int leftChild = this.leftChild(0);
+
     }
     
     public int parent(int i){
