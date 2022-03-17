@@ -70,8 +70,8 @@ public class Heap {
         for (int i = 0; i < array.length; i++) {
             
             H.heap.add(new HeapEntry(array[i]));
-            H.downHeap();
         }
+            H.downHeap(0);
         
         
         
@@ -84,10 +84,12 @@ public class Heap {
         
         int size = this.heap.size();
         
+        System.out.printf(" ");
+        
         for (int i = 0; i < size; i++) {
             
             HeapEntry e = this.heap.get(i);
-            System.out.printf(" %d ", e.key);
+            System.out.printf("%d ", e.key);
         }
         
         System.out.printf("\n");
@@ -121,11 +123,28 @@ public class Heap {
         
     }
     
-    private void downHeap() {
+    private void downHeap(int j) {
         
-        
-        
-        int leftChild = this.leftChild(0);
+        while (j < this.size()-1) {
+             
+            int l = leftChild(j);
+            int r = rightChild(j);
+            int c;
+            
+            if(this.heap.get(l).key < this.heap.get(r).key){
+                c = l;
+            }else{
+                c = r;
+            }
+            
+            if(this.heap.get(j).key > this.heap.get(c).key){
+                return;
+            }
+            
+            this.swap(j,c);
+            
+            j = c;
+        }
 
     }
     
@@ -141,6 +160,7 @@ public class Heap {
     
         return 2*i - 2 ;
     }
+    
     
     public void swap(int i , int j){
         
