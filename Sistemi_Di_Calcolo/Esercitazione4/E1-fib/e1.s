@@ -4,28 +4,36 @@
 
 fib:
 
-    movl 4(%esp),%ecx
     pushl %esi
+    pushl %ebx
+    subl $4,%esp
 
-    L:
+    movl 16(%esp),%esi #si = n
+    movl $1,%eax        #a = 1
 
-        cmpl $2,%ecx
-        jl E 
+    cmpl $2,%esi # si < 2
+    jl E            # goto E
 
-        pushl %ebx
-        call fib
-                
+    decl %esi     #si--
+    movl %esi,(%esp) #passaggio val
+
+    call fib # fib(si-1)
+
+    movl %eax,%ebx # b = a 
+
+    decl %esi     #si--
+    movl %esi,(%esp)
+    call fib
+
+    addl %ebx,%eax
 
 
-        jmp L
 
-
-    E:
-        movl $1,%eax
-
-        popl %ebx
-        popl %esi
-        ret
+E:
+    addl $4,%esp
+    popl %ebx
+    popl %esi
+    ret
 
 
 
@@ -36,9 +44,9 @@ fib:
 
     #c = n
     #if(c < 2) goto E
-    #
-    #return fib(c-1) + fib (c-2)
-    #
+    #b = fib(c-1)
+    # a = fib(c-2)
+    #   return a + b
     #
     # E
     #    a = 1

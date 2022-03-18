@@ -2,33 +2,41 @@
 
 .globl clone
 
-clone:
+clone:  #   void* clone(const void* src, int n) 
 
-    call malloc
+    pushl %edi                          #    int di;
+    pushl %esi                          #    int si;
+    pushl %ebx                          #    int b;
+    subl $12, %esp                      #    
+                                        
+    movl 28(%esp), %ebx                 #    b = src;
+    movl 32(%esp), %edi                 #    di = n;
 
-    cmpl $0,8(%esp) # if(des == 0 ret 0)
-    je E
+    movl %edi,(%esp)                  #
+    call malloc                         #    a = malloc(di);
+    movl %eax,%esi                      #    si = a; 
 
-    movl 4(%esp),%ecx
-    movl 8(%esp),%edx
+    xorl %eax,%eax
 
-    subl	$12, (%esp)
+    cmpl $0,%esi                        #    if(si == 0)
+    je E                                #    goto E
+
+    # Passaggio parametri a funzione
+    movl %esi,(%esp)
+    movl %ebx,4(%esp)
+    movl %edi,8(%esp)
 
     
-
-    movl   %eax,4(%esp)
-    movl   %ecx,8(%esp)
-    movl   %edx,12(%esp)
-
-    call memcpy
-
-
-
-    ret
     
+    call memcpy                         #    memcpy(si,b,di)
+    #
 
+    movl %esi,%eax                      #    a = si
 
-    E:
-        movl $0,%eax
-        ret
-        
+    
+E: 
+    addl $12,%esp
+    popl %ebx
+    popl %esi
+    popl %edi
+    ret                                 #  return a;
