@@ -3,6 +3,18 @@ import java.util.ArrayList;
 
 public class Heap {
 
+    protected int getMin() {
+        
+        int rad = heap.get(0).key;
+        
+        HeapEntry last = heap.remove(heap.size()-1);
+        heap.set(0, last);
+        this.downHeap(0);
+        
+        
+        return rad;
+    }
+
 
     public enum HEAP_TYPE {MAX_HEAP, MIN_HEAP};
 
@@ -63,22 +75,6 @@ public class Heap {
         this.upheap(heap.size()-1);
         return e;
     }
-    public static Heap array2heap(int[] array, HEAP_TYPE type) {
-        
-        Heap H = new Heap(type, array.length);
-        
-        for (int i = 0; i < array.length; i++) {
-            
-            H.heap.add(new HeapEntry(array[i]));
-        }
-            H.downHeap(0);
-        
-        
-        
-        
-        
-        return H;
-    }
 
     public void print() {
         
@@ -99,10 +95,25 @@ public class Heap {
     }
 
     public static void heapSort(int[] array) {
+        
+        
+        Heap h = new Heap(HEAP_TYPE.MIN_HEAP, array.length);
+        
+        for (int i = 0; i < array.length; i++) {
+            h.add(array[i]);
+        }
+            
+        for (int j = 0; j < h.size(); j++) {
+            array[j] = h.getMin();
+        }
+        
+        
+        
         return;
     }
 
     public void updateEntryKey(HeapEntry e, int key) {
+        e.key = key;
         return;
     }
 
@@ -112,7 +123,7 @@ public class Heap {
         while(i > 0){
             int p = this.parent(i);
             
-            if(heap.get(i).key > heap.get(p).key ){
+            if(heap.get(i).key >= heap.get(p).key ){
                 break;
             }
             
@@ -123,46 +134,59 @@ public class Heap {
         
     }
     
+    public static Heap array2heap(int[] array, HEAP_TYPE type) {
+        
+        Heap H = new Heap(type, array.length);
+        
+        for (int i = 0; i < array.length; i++) {
+            
+            H.heap.add(new HeapEntry(array[i]));
+        }
+        int ind = H.parent(array.length -1);
+        for (int k = ind;k >= 0; k--) {
+            H.downHeap(k);
+            
+        }
+        
+        return H;
+    }
     private void downHeap(int j) {
         
-        while (j < this.size()-1) {
-             
-            int l = leftChild(j);
-            int r = rightChild(j);
-            int c;
+        while(hasLeft(j)){
+        
+            int c = leftChild(j);
             
-            if(this.heap.get(l).key < this.heap.get(r).key){
-                c = l;
-            }else{
-                c = r;
+            if(hasRight(j)){
+                int r = rightChild(j);
+                if(heap.get(c).key < heap.get(r).key){
+                    c = r;
+                }
             }
-            
-            if(this.heap.get(j).key > this.heap.get(c).key){
+            if(heap.get(c).key > heap.get(j).key){
                 return;
             }
             
-            this.swap(j,c);
-            
+            swap(c,j);
             j = c;
         }
 
     }
     
-    public int parent(int i){
+    protected int parent(int i){
     
         return (i-1) / 2;
     }
-    public int leftChild(int i){
+    protected int leftChild(int i){
     
-        return 2*i+1;
+        return 2*i + 1;
     }
-    public int rightChild(int i){
+    protected int rightChild(int i){
     
-        return 2*i - 2 ;
+        return 2*i + 2 ;
     }
     
     
-    public void swap(int i , int j){
+    protected void swap(int i , int j){
         
         HeapEntry a = this.heap.get(i);
         HeapEntry b = this.heap.get(j);
@@ -171,6 +195,9 @@ public class Heap {
         heap.set(j, a);
         
     }
+    
+    protected boolean hasLeft(int j) { return leftChild(j) < heap.size(); }
+    protected boolean hasRight(int j) { return rightChild(j) < heap.size(); }
     
     
     
