@@ -135,17 +135,21 @@ public class Sort {
         
         protected void downHeap(int i){
             
-            while(i < heap.size()-1){
+            while(leftChild(i) < heap.size()){
                 
-                if(leftChild(i) > heap.size() -1 ){
-                    break;
-                }
+                
                 
                 int c = leftChild(i) ;
+                int r  =rightChild(i);
                 
-                if(c > rightChild(i) && rightChild(i) < heap.size()-1){
-                    c  = rightChild(i);
+                if(r < heap.size()-1){
+                    
+                    if(heap.get(c) > heap.get(r)){
+                        c  = r;
+                    }
                 }
+                
+                if( heap.get(i) < heap.get(c)){break;}
                 
                 swap(i,c);
                 
