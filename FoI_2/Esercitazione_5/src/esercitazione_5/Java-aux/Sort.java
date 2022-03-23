@@ -81,8 +81,41 @@ public class Sort {
     }
 
     public void bucketSort(int[] array) {
-        System.out.println("bucketSort non è ancora implementato");
-        return;
+        
+        int n = array.length; // range [0,N-1]
+        ArrayList<ArrayList<Integer>> res = new ArrayList<>(n);
+        
+        for (int t = 0; t < n; t++) {
+            res.add(new ArrayList<Integer>());
+        }
+        
+        
+        for (int i = 0; i < n; i++) {
+            
+            int val = array[i];
+            res.get(val).add(val);
+        }
+        
+        int k = 0;
+        for (int j = 0; j < n; j++) {
+            
+            ArrayList<Integer> bucket = res.get(j);
+            
+            //Sorting
+            
+          
+            int s = bucket.size();
+            for (int z = 0; z < s; z++) {
+                
+                //System.out.printf("%d ", bucket.get(z));
+                
+                array[k] = bucket.get(z);
+                k++;
+            }
+        }
+        
+        
+
     }
     
     

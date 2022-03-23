@@ -97,15 +97,16 @@ public class Utils{
             for (int i = 0; i < size; i++) 
                 ris[i] = i;
         } else if(tipo.equals(ORDINATO_DECRESCENTE)){
+            
             for (int i = 0; i < size; i++) 
-                ris[i] = size - i;
+                ris[i] = (size-1) - i;
         } else if(tipo.equals(QUASI_CRESCENTE)){ 
             for (int i = 0; i < size; i++) 
                 ris[i] = i;
             genInversioni(ris, num_inversioni);
         } else if(tipo.equals(QUASI_DECRESCENTE)){
             for (int i = 0; i < size; i++) 
-                ris[i] = size - i;
+                ris[i] = (size-1) - i;
             genInversioni(ris, num_inversioni);
         } else{
             printHelp();
