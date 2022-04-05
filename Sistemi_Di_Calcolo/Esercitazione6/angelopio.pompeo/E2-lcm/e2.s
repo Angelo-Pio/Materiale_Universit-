@@ -8,36 +8,39 @@ lcm : # int lcm(int x, int y) {
     pushl %edi
 
 
-    movl 20(%esp),%eax          # int a = y;
-    movl 16(%esp),%ecx          # int c = x
+    
+    movl 16(%esp),%esi          # int c = x
+    movl 20(%esp),%edi          # int a = y
 
+    movl %edi,%ecx              # int b = a;
 
-    cmpl %ecx,%eax              # if(x > y)goto E0;
-    jg E0
+    cmpl %edi,%esi              # if(x > y) a = x;
+    cmovg %esi,%ecx
 
-L:  
-    int b = a % x ;
-    int si = a % y ;
+L:
 
-        b = b == 0;
-        si = si == 0;
+    movl %ecx, %eax         # a = c; // setta d in modo opportuno!
+    movl %eax, %edx
+    sarl $31, %edx
+    idivl %esi              # int d = a % si;
+    testl %edx, %edx        # char bl = d == 0;
+    setzb %bl
+    movl %ecx, %eax         # a = c; // setta d in modo opportuno!
+    movl %eax, %edx
+    sarl $31, %edx
+    idiv %edi               # d = a % di;
+    testl %edx, %edx        # char bh = d == 0;
+    setzb %bh
+    andb %bh, %bl
+    jne E
 
-        int di = b & si;
+    incl %ecx
+    jmp L
 
-        if(di) goto E;
+E:    # Epilogo
+    movl %ecx,%eax
 
-        incl %eax               # a += 1;    
-
-    jmp L                       # goto L;
-
-E0:
-    movl 16(%esp),%eax          # a = x;
-    jmp L                       # goto L;
-E:
-    popl %ebx
-    popl %esi
     popl %edi
-    ret                         # return a;    
-
-
-}
+    popl %esi
+    popl %ebx
+    ret
