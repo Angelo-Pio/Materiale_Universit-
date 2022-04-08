@@ -16,7 +16,7 @@ R:
     goto R;
 
 L: 
-    a = l2;
+    *l1 = l2;
     return ;
 
 E:
