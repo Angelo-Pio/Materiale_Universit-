@@ -37,22 +37,57 @@ public class OpenHashTable extends AbstractHashTable {
             if(size() == 0){
                 return -1;
             }
+            Entry couple = table[position];
             
-            if(table[position] == null || table[position] == DEFUNCT){
+            if(couple == null){
                 return -1;
             }
             
-            return table[position].getValue();
+            if(couple.equals(DEFUNCT)){
+                for (int i = position; i < table.length; ++i) {
+                    int pos = quadProb(position, i);
+                    if(table[pos].getKey() == k){
+                        return table[pos].getValue();
+                    }
+                }
+                return -1;
+            }
+            
+            return couple.getValue();
 	}
 	
+        protected int quadProb(int hash, int i){ return (hash + (i*i)) % this.getCapacity();}
+        
 	// Aggiorna il valore associato alla chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int put(String k, int value) {
 		
+            int position = hashFunction(k);
             
+            Entry couple = table[position];
             
+            if(couple == null){
+                couple.setValue(value);
+                return -1;
+            }
             
-            return -1;
+            if(couple.equals(DEFUNCT)){
+                
+                int p = position;
+                
+                for (int i = position; i < table.length; ++i) {
+                    int pos = quadProb(position, i);
+                    if(table[pos].getKey() == k){
+                        return table[pos].getValue();
+                    }
+                }
+                return -1;
+            }
+            
+            int old = couple.getValue();
+            couple.setValue(value);
+            
+            return old;
 	}
 	
 	

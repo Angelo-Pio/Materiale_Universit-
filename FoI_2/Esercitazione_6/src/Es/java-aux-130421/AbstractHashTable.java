@@ -58,8 +58,12 @@ public abstract class AbstractHashTable {
 	// a cominciare dalle stringhe
 	protected int hashFunction(String k) { 
             int hCode = k.hashCode();
-            return (int) (Math.abs(k.hashCode()*a + b)%prime)%capacity;
+            return compFunction(hCode);
         }
+
+    protected int compFunction(int hCode) {
+        return (int) (Math.abs(hCode*a + b)%prime)%capacity;
+    }
 	
 	// metodo che aggiorna la dimensione della tabella hash	(N)
 	protected void resize(int newCap) { 	
