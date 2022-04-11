@@ -24,19 +24,35 @@ public class OpenHashTable extends AbstractHashTable {
 
 	// Inizializza una tabella hash vuota secondo i parametri passati al costruttore
 	protected void createTable() {
-		return;
+            table = new Entry[this.getCapacity()];
+            return;
 	}
 
 	// Restituisce il valore (intero) associato alla chiave k
 	// Restituisce -1 se la chiave è assente
 	public int get(String k) {
-		return -1;
+	
+            int position = hashFunction(k);
+            
+            if(size() == 0){
+                return -1;
+            }
+            
+            if(table[position] == null || table[position] == DEFUNCT){
+                return -1;
+            }
+            
+            return table[position].getValue();
 	}
 	
 	// Aggiorna il valore associato alla chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int put(String k, int value) {
-		return -1;
+		
+            
+            
+            
+            return -1;
 	}
 	
 	
