@@ -1,14 +1,34 @@
+import java.io.BufferedReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Graph<V> {
 
     protected LinkedList<GraphNode<V>> nodesList;
+    protected int n_nodes;
+    protected int n_edges;
+    
+    
     
     public Graph () {
         this.nodesList = new LinkedList<>();
     }
+
+    public Graph(int n_nodes, int n_edges) {
+        this.nodesList = new LinkedList<>();
+        this.n_nodes = n_nodes;
+        this.n_edges = n_edges;
+    }
+    
+    
 
     public List<GraphNode<V>> getNodes() {
         
@@ -131,12 +151,15 @@ public class Graph<V> {
             if(graphNode.equals(v)){
             
                 if(graphNode.outEdges == null){return;}
+                else{
+                
                     
-                for (GraphNode<V> outEdge : graphNode.outEdges) {
-
-
-                    removeEdge(v, outEdge);
+                    for (Iterator<GraphNode<V>> iterator = nodesList.iterator(); iterator.hasNext();) {
+                        GraphNode<V> next = iterator.next();
+                        removeEdge(v, next);
+                    }
                 }
+                    
             
             }
         }
@@ -149,7 +172,42 @@ public class Graph<V> {
     }
 
     public static <V> Graph<V> readFF(File input){
-      return null;
+        
+        Graph<V> ret = new Graph<>();
+        
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(input));
+            
+            String firstLine = br.readLine();
+            StringTokenizer tok = new StringTokenizer(firstLine," ");
+            int v = Integer.parseInt(tok.nextToken());
+            int e = Integer.parseInt(tok.nextToken());
+            
+            ret = new Graph<V>(v, e);
+            
+            for (int i = 0; i < e; i++) {
+                String line = br.readLine();
+                
+                tok = new StringTokenizer(line);
+                while(tok.hasMoreTokens()){
+
+                    GraphNode<V> v1 = ret.addNode((V) tok.nextToken());
+                    GraphNode<V> v2 = ret.addNode((V) tok.nextToken());
+                    ret.addEdge(v1, v2);
+                }
+            }
+            br.close();
+            
+            
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+        
+        return ret;
+        
     }
 
      public String printAdj() {
@@ -189,7 +247,7 @@ public class Graph<V> {
     	node.state = GraphNode.Status.EXPLORED;
 	}
 
-	public int nConComp(){
+    public int nConComp(){
 		int ret = 0;
 		for(GraphNode<V> node : this.nodesList) {
 			if(node.state == GraphNode.Status.UNEXPLORED) {
@@ -211,7 +269,7 @@ public class Graph<V> {
     	node.state = GraphNode.Status.EXPLORED;
 	}
 
-	public List<Graph<V>> getConComp(){
+    public List<Graph<V>> getConComp(){
 		LinkedList<Graph<V>> toRet = new LinkedList<>();
 		for(GraphNode<V> node : this.nodesList) {
 			if(node.state == GraphNode.Status.UNEXPLORED) {
