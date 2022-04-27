@@ -152,44 +152,91 @@ public class Graph<V> {
       return null;
     }
 
-    public String printAdj() {
-        
-        String adjString = "";
-        
-        for (GraphNode<V> graphNode : nodesList) {
-            if (graphNode.outEdges == null) {
-                continue;
-            }
-            for (GraphNode<V> outEdge : graphNode.outEdges) {
-                adjString += outEdge.toString() + "\n";
-            }
+     public String printAdj() {
+    	StringBuffer toRet = new StringBuffer();
+        for(GraphNode<V> v : this.nodesList) {
+      	  toRet.append(v.value + ": ");
+      	  for(GraphNode<V> e: v.outEdges) {
+      		  toRet.append(e.value + " ");
+      	  }
+      	  toRet.append("\n");
         }
-        
-        return adjString;
+        return toRet.toString();
     }
-
+    
     @Override
     public String toString(){
-        
-        String ret = "(";
-        
-        for (GraphNode<V> graphNode : nodesList) {
-            ret += graphNode.toString()+"\t";
-        }
-        
-        ret += ")";
+    	StringBuffer toRet = new StringBuffer();
+    	for(GraphNode<V> node : this.nodesList) {
+    		if(node.state == GraphNode.Status.UNEXPLORED)
+    			DFSprintEdges(node, toRet);
+    	}
+    	return toRet.toString();
+    }
+    
+    private void DFSprintEdges(GraphNode<V> node, StringBuffer str) {
+    	if(node.state != GraphNode.Status.UNEXPLORED)
+    		return;
+    	node.state = GraphNode.Status.EXPLORING;
+    	for(GraphNode<V> e : node.outEdges) {
+    		if(e.state == GraphNode.Status.UNEXPLORED)
+    			str.append(node.value + " " + e.value + "\n");
+    	}
+    	for(GraphNode<V> e : node.outEdges) {
+    		if(e.state == GraphNode.Status.UNEXPLORED)
+    			DFSprintEdges(e, str);
+    	}
+    	node.state = GraphNode.Status.EXPLORED;
+	}
 
-        return ret;
-        
+	public int nConComp(){
+		int ret = 0;
+		for(GraphNode<V> node : this.nodesList) {
+			if(node.state == GraphNode.Status.UNEXPLORED) {
+				ret++;
+				DFS(node);
+			}
+		}
+		return ret;
     }
 
-    public int nConComp(){
-      return 0;
+    private void DFS(GraphNode<V> node) {
+    	if(node.state != GraphNode.Status.UNEXPLORED)
+    		return;
+    	node.state = GraphNode.Status.EXPLORING;
+    	for(GraphNode<V> e : node.outEdges) {
+    		if(e.state == GraphNode.Status.UNEXPLORED)
+    			DFS(e);
+    	}
+    	node.state = GraphNode.Status.EXPLORED;
+	}
+
+	public List<Graph<V>> getConComp(){
+		LinkedList<Graph<V>> toRet = new LinkedList<>();
+		for(GraphNode<V> node : this.nodesList) {
+			if(node.state == GraphNode.Status.UNEXPLORED) {
+				Graph<V> g = new Graph<>();
+				toRet.add(g);
+				DFSfillCC(node, g.nodesList);
+			}
+		}
+		
+		return toRet;
     }
 
-    public List<Graph<V>> getConComp(){
-      return null;
-    }
+    private void DFSfillCC(GraphNode<V> node, LinkedList<GraphNode<V>> list) {
+    	if(node.state != GraphNode.Status.UNEXPLORED)
+    		return;
+    	node.state = GraphNode.Status.EXPLORING;
+    	list.add(node);
+    	for(GraphNode<V> n : node.outEdges) {
+    		if(n.state == GraphNode.Status.UNEXPLORED)
+    			DFSfillCC(n, list);
+    	}
+    	node.state = GraphNode.Status.EXPLORED;
+	}
+
+   
 
     
     // GraphNode Class
@@ -199,7 +246,7 @@ public class Graph<V> {
     public enum Status {UNEXPLORED, EXPLORED, EXPLORING}
 
     protected V value;
-    protected LinkedList<GraphNode<V>> outEdges;
+    protected LinkedList<GraphNode<V>> outEdges = new LinkedList<>();
 
         public GraphNode(V value) {
             this.value = value;
