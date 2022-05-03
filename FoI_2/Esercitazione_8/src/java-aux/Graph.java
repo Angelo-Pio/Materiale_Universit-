@@ -248,14 +248,19 @@ public class Graph<V> {
 	}
 
     public int nConComp(){
-		int ret = 0;
-		for(GraphNode<V> node : this.nodesList) {
-			if(node.state == GraphNode.Status.UNEXPLORED) {
-				ret++;
-				DFS(node);
-			}
-		}
-		return ret;
+        
+            int count = 0;
+            LinkedList<GraphNode<V>> compConn = new LinkedList<>();
+            
+            for (GraphNode<V> graphNode : nodesList) {
+                if(graphNode.state == graphNode.state.UNEXPLORED){
+                    count++;
+                    DFS(graphNode);
+                }
+            }
+                
+        
+            return count;
     }
 
     private void DFS(GraphNode<V> node) {
@@ -270,16 +275,28 @@ public class Graph<V> {
 	}
 
     public List<Graph<V>> getConComp(){
-		LinkedList<Graph<V>> toRet = new LinkedList<>();
-		for(GraphNode<V> node : this.nodesList) {
-			if(node.state == GraphNode.Status.UNEXPLORED) {
-				Graph<V> g = new Graph<>();
-				toRet.add(g);
-				DFSfillCC(node, g.nodesList);
-			}
-		}
-		
-		return toRet;
+            LinkedList<Graph<V>> ret = new LinkedList<>();
+            
+            for (GraphNode<V> graphNode : nodesList) {
+                
+                if(graphNode.state == graphNode.state.UNEXPLORED){
+                    LinkedList<GraphNode<V>> nodes = new LinkedList<>();
+                    DFSfillCC(graphNode, nodes);
+                    
+                    Graph<V> subGraph = new Graph<>();
+                    
+                    for (GraphNode<V> node : nodes) {
+                        subGraph.nodesList.add(node);
+                    }
+                    ret.add(subGraph);
+                }
+                
+            }
+            
+            
+            return ret;
+            
+            
     }
 
     private void DFSfillCC(GraphNode<V> node, LinkedList<GraphNode<V>> list) {
