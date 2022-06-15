@@ -3,24 +3,41 @@
 
 int list_equal(const node_t *l1, const node_t *l2) {
 
-    const node_t* c = l1;
-    const node_t* d = l2;
+    const node_t* si = l1;
+    const node_t* di = l2;
 
-L:
-    if(c == 0) goto E;
-    if(d == 0) goto E;
+    int a = 0;
 
-    if(c->elem != d->elem) goto F;
-    c = c->next;
-    d = d->next;
+L:  
+
+    if(si == 0){
+        goto E1;
+    }
+        if(di == 0){
+            goto E1;
+        }
+
+    short c = l1->elem;
+    short d = l2->elem;
+
+    if(c != d){
+        goto E;
+    }
+
+    si = si->next;
+    di = di->next;
     goto L;
 
-F:
-    int a = 0;
-    return a;
+
+E1:
+
+    if(si == 0){
+        a = si == di ? 1 : 0 ;
+    }
+
 E:
-    a = (c == d) ? 1 : 0;    
     return a;
+
 
 
 }

@@ -2,31 +2,39 @@
 
 void bubble_sort(short *v, unsigned n)
 {
-    unsigned i, again;
 
+    int c = n;
+    int a = 0;  // do..
+    int d = 1;
+    goto L1;
 L:
-    again = 0;
-    i = 1;
+
+    if( a == 0) goto E; 
+    
+    a = 0;
+    d = 1;
+
+L1: //for
+    // short* si = v;
+    // short* di = v;
+
+        if(d >= c) goto L; //i < n
+
+        // d-=1;
+        // *si = si[d];
+
+        // d+=1;
+        // *di = di[d];
+
+        if(v[d-1] > v[d]){
+             swap(&v[d-1],&v[d]);
+             a = 1 ;
+        }
+    
+    
+    ++d;
+    goto L1; //while
 
 E:
-    if (i >= n)
-    {
-        goto L1;
-    }
-        if (v[i - 1] > v[i])
-        {
-            swap(&v[i - 1], &v[i]);
-            again = 1;
-        }
-
-    ++i;
-    goto E;
-L1:
-
-    if (again)
-    {
-        goto L;
-    }
-
     return;
 }

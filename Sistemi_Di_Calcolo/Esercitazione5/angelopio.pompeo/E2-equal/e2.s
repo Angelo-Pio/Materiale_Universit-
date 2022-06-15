@@ -2,42 +2,67 @@
 .globl list_equal
 
 list_equal: # int list_equal(const node_t *l1, const node_t *l2) {
+
     pushl %ebx
     pushl %esi
-    movl 12(%esp), %ecx      # const node_t* c = l1;
-    movl 16(%esp), %edx      # const node_t* d = l2;
+    pushl %edi
 
-L:
-    testl %ecx,%ecx         # if(c == 0) goto E;
-    je E
+
+    movl 16(%esp),%esi #     const node_t* si = l1;
+    movl 20(%esp),%edi #   const node_t* di = l2;
+    xorl %eax,%eax # int a = 0
+
+
+L:  
+    #   if(si == 0){
+    #       goto E1;
+    #   }
+    #       if(di == 0){
+    #           goto E1;
+    #       }
+
+    cmpl $0,%esi
+    je E1
+    cmpl $0,%edi
+    je E1
+
+    movw (%esi),%cx #    short c = l1->elem;
+    movw (%edi),%dx #    short d = l2->elem;
+
+    cmpw %cx,%dx # if(c != d){
+    jne E   #    goto E;
     
-    testl %edx,%edx         # if(d == 0) goto E;
-    je E
-    
-    movw (%ecx),%si         # si = c->elem
-    movw (%edx),%bx         # bx = d->elem
 
-    testw %si,%bx         # if(c->elem != d->elem) goto F
-    jne F
+    movl 4(%esi),%esi # si = si->next;
+    movl 4(%edi),%edi # di = di->next;
+    jmp L              # goto L;
 
-        movl 4(%ecx),%ecx    # c = c->next;
-        movl 4(%edx),%edx    # d = d->next;
-    
-    jmp L                   # goto L;
 
-F:
-    movl $0,%eax          # int a = 0;
-    jmp S
+E1:
+
+    cmpl $0,%esi
+    sete %al
+
+    cmpl $0,%edi
+    sete %bl
+
+    andb %bl,%al    
+
+    movzbl %al,%eax
+
+    # if(si == 0){
+    #     a = si == di ? 1 ; 0
+    # 
 
 E:
-    testl %ecx,%ecx        # a = (c == d) ? 1 ; 0; 
-    setz %al
-    testl %edx,%edx        # a = (c == d) ? 1 ; 0; 
-    setz %ah
-
-    andb %ah,%al
-    movsbl %al,%eax
-S:
+    popl %edi
     popl %esi
     popl %ebx
     ret
+
+#l2 20
+#l1 16
+#rit 12
+#b 8
+#si 4
+#di 0

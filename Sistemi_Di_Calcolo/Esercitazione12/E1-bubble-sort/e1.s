@@ -3,83 +3,74 @@
 
 bubble_sort:    # void bubble_sort(short *v, unsigned n)
 
-    # unsigned i, again;
-    
-    pushl %ebx  #v[i-1]
-    pushl %edi  #v[i]
+    pushl %esi
+    pushl %edi
+    pushl %ebx
     subl $8,%esp
 
 
-    xorl %ecx,%ecx # c = i
-    movl 24(%esp),%edx    # d = n
-
+    movl $24,%ecx # int c = n;
+    xorl %eax,%eax # int a = 0;  // do..
+    movl $1,%ebx # int d = 1;
+    jmp L1 # goto L1;
 L:
-    xorl %eax,%eax      #    again = 0;
-    movl $1,%ecx        # i = 1;
+
+    cmpl $0,%eax #if( a == 0) goto E; 
+    je E
+
+    movl $0,%eax     # a = 0;
+    movl $1,%ebx     # d = 1;
+    
+
+L1: 
+    # short* si = v;
+    #  short* di = v;
+
+        cmpl %ecx,%edx # if(d >= c) goto L; //i < n
+        jge L 
+        
+    movl 20(%esp),%esi
+    movl 20(%esp),%edi
+
+    decl %edx 
+    movw (%esi,%ebx,2),%si  #si = v[i-1]
+
+    incl %edx
+    movw (%edi,%ebx,2),%di #di = v[i]
+      
+    cmpw %si,%di #    if(v[d-1] < v[d]){
+    jl L2       #goto L2
+
+    leal -2(%esi,%ebx,2),%eax
+    movl %eax,(%esp)
+    
+    
+    leal (%esi,%ebx,2),%eax
+    movl %eax,4(%esp)
+
+    call swap      # swap(&v[d-1],&v[d]);
+    movl $1,%eax   # a = 1 ;
+             
+
+L2:    
+    incl %ebx # ++d;
+    jmp L1 # goto L1; //while
 
 E:
-    cmpl %edx,%ecx      #if (i >= n)
-    jge L1              # goto L1;
-    
-        movl 20(%esp),%ebx
-
-        movw (%ebx,%ecx,2),%di
-
-        decl %ecx
-        movw (%ebx,%ecx,2),%bx
-        incl %ecx
-
-            cmpw %di,%bx # if (v[i - 1] > v[i])
-            jng E0
-
-            movl %ebx,(%esp)    
-            movl %edi,4(%esp)    
-            # swap(&v[i - 1], &v[i]);
-            call swap
-            movl $1,%eax # again = 1;
-
-
-E0:
-    incl %ecx           # ++i;
-    jmp E               # goto E;
-L1:
-
-    cmpl $1,%eax  # if (again)
-    je L          # goto L;
-    
-R:
     addl $8,%esp
-    popl %edi
     popl %ebx
-    ret
+    popl %edi
+    popl %esi
 
-# void bubble_sort(short *v, unsigned n)
-# {
-#     unsigned i, again;
-# 
-# L:
-#     again = 0;
-#     i = 1;
-# 
-# E:
-#     if (i >= n)
-#     {
-#         goto L1;
-#     }
-#         if (v[i - 1] > v[i])
-#         {
-#             swap(&v[i - 1], &v[i]);
-#             again = 1;
-#         }
-# 
-#     ++i;
-#     goto E;
-# L1:
-# 
-#     if (again)
-#     {
-#         goto L;
-#     }
-# 
-#     return;
-# }
+
+# n 24
+# v 20
+# rit 16
+# si 12
+# di 8
+# y 4
+# x 0
+
+
+
+

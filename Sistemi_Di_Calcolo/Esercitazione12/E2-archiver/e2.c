@@ -1,55 +1,78 @@
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include "e2.h"
 
-
+void check_error(int id , char* str){
+    if(id == -1){
+        perror(strcat("Error",str));
+        exit(EXIT_FAILURE);
+    }
+    return;
+}
 
 // inserire la soluzione qui...
 void archiver(const char* archive, const char** files, int n){
 
+    int fd = open(archive, O_CREAT | O_TRUNC | O_WRONLY, 0640);
+    check_error(fd,"Open archive");
     
-    // Crea file e nominalo archive con permessi r-w per host e r per 
-
-    int fd = open(archive,O_WRONLY | O_CREAT | O_TRUNC,0644);
-    assert(fd!=-1);
-
-    char* str = "dimensione in byte | contenuto del campo\n";
-    char* padding = "------------------------------------------------------\n";
-    write(fd,str,strlen(str));
-    write(fd,padding,strlen(padding));
+    char filename[256];
 
     for (int i = 0; i < n; i++)
     {
-        char* file_path;
-        strncpy(file_path,files[i],strlen(files[i])) ; // prendi un file
-        int fd_0 = open(file_path,O_WRONLY | O_CREAT | O_TRUNC); //aprilo
-        assert(fd_0!=-1);
+        strcpy(filename,files[i]);
+        //  Apri file
+        int od = open(filename,O_RDONLY);
+        check_error(od,"Open file");
 
-        int size = lseek(fd_0,0,SEEK_END);
+        //Ottieni dimensione file
+        long size = lseek(od,0,SEEK_END);
+        check_error(size,"Lseek 1");
 
-        char* format = strcat("256                | ",file_path);
+        // Ristabilisci il puntatore
+        int ld = lseek(od,0,SEEK_SET);
+        check_error(ld,"Lseek 2 ");
 
-        write(fd,format+'\n',strlen(format));
-
-        char* format2;
-        sprintf(format2,"8                | %d",size);
-
-        write(fd,format2+'\n',strlen(format2));
-
-        char* format3;
-        read(fd_0,format3,size);
-        write(fd,format3+'\n',strlen(format3));
+        int res =write(fd,filename,256);
+        check_error(res,"Write filename");
 
 
+        res =write(fd,&size,sizeof(size));
+        check_error(res,"Write size filename");
+
+        // Write file
+        
+        ssize_t r;
+        char buff[2048];
+        for (;;)
+        {
+            r = read(od,buff,2048);
+            check_error(res,"Read file");
+
+            if(r== 0) break;
+
+            r = write(fd,buff,r);
+            check_error(r,"Write file");
+        }
+        
 
 
-        write(fd,padding,strlen(padding));
-        close(fd_0); // chiudiilo e passa al prossimo
+
+
+        res = close(od);
+        check_error(res,"Close file");
     }
+
+    int res = close(fd);
+    check_error(res,"Close archive");
     
-    close(fd);
+
+  
 
 }
