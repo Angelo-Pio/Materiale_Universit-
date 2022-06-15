@@ -14,7 +14,6 @@ public class Driver {
         }
 
         if (argv[0].equals("inverti")) {
-
             LinkedList<Integer> l = new LinkedList<Integer>();
             l.add(10);
             l.add(20);
