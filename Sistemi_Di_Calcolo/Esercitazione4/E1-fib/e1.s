@@ -2,52 +2,47 @@
 
 .globl fib
 
-fib:
+fib:        # int fib(int n) 
 
-    pushl %esi
     pushl %ebx
+    pushl %esi
+
     subl $4,%esp
 
-    movl 16(%esp),%esi #si = n
-    movl $1,%eax        #a = 1
 
-    cmpl $2,%esi # si < 2
-    jl E            # goto E
+    movl 16(%esp),%ebx #  int b = n;
+    movl $1,%eax # int a = 0;
 
-    decl %esi     #si--
-    movl %esi,(%esp) #passaggio val
+    cmpl $2,%ebx # if(b < 2){
+    jl E #     goto E;
+    
+    decl %ebx
+    movl %ebx,(%esp) #c = fib(b-1)
+    call fib
+    
+    movl %eax,%esi
 
-    call fib # fib(si-1)
 
-    movl %eax,%ebx # b = a 
-
-    decl %esi     #si--
-    movl %esi,(%esp)
+    decl %ebx
+    movl %ebx,(%esp) #c = fib(b-1)
     call fib
 
-    addl %ebx,%eax
+    addl %esi,%eax
+
+     # a = c + d 
+    # return a ;
+
+
+    E: 
+        addl $4,%esp
+        popl %esi
+        popl %ebx
+        ret
 
 
 
-E:
-    addl $4,%esp
-    popl %ebx
-    popl %esi
-    ret
 
 
 
 
 
-
-
-
-    #c = n
-    #if(c < 2) goto E
-    #b = fib(c-1)
-    # a = fib(c-2)
-    #   return a + b
-    #
-    # E
-    #    a = 1
-    #    return a 

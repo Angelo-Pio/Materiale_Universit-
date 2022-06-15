@@ -2,25 +2,16 @@
 
 void drop_spaces(char* s){
 
-    char *res = s;
-    int j = 0;
-    int i = 0;
-    while(s[i] != '\0'){
+    while(*s != '\0'){
 
-        if(s[i] != ' '){
-            res[j] = s[i];
-            j++;
+        if(*s == ' ' && *(s+1) != '\0'){
+
+            *s =   *(s+1);
+            *(s+1) = ' ';
         }
-        i++;
+
+        s++;
 
     }
-
-    res[j] = '\0';
-
-
-
-    s = res;
     return;
-
-
 }

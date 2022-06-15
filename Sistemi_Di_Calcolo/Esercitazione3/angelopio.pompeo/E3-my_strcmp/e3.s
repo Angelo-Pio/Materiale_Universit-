@@ -4,29 +4,32 @@
 
 my_strcmp:
 
-    movl	$0, %ecx
+   xorl %edx,%edx
+
+L:
+   movl 4(%esp),%eax     
+   movl 8(%esp),%ecx 
+    
+    movb (%eax,%edx,1),%al
+    movb (%ecx,%edx,1),%cl
+
+    cmpb $0,%al
+    je E
 
 
-M:
-
-    movl    8(%esp),%edx
-    movb    (%edx,%ecx,1),%dl
-
-    movl    4(%esp),%eax
-    movb    (%eax,%ecx,1),%al
-
-    cmpb %dl,%al
-    jne E
-
-    incl %ecx
-    jmp M
+    cmpb %al,%cl
+    jne E  
 
 
+
+    incl %edx
+    jmp L
 
 E:
-    subb %dl,%al
+    subl %ecx,%eax
     ret
-
     
+
+
     
     

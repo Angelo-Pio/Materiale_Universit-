@@ -3,20 +3,16 @@
 
 f:
 
-    movl 4(%esp),%eax
-    movl 8(%esp),%ecx
+    movl 4(%esp),%ecx
+    movl 8(%esp),%edx
     
-    
-    movl 4(%esp),%edx 
+    movl %ecx,%eax
+    addl %edx,%eax
 
-    subl %ecx,%edx
+    subl %edx,%ecx
 
-    addl %ecx,%eax
-
-    imull %edx,%eax
+    imull %ecx,%eax
 
     ret
-    
-
 
     

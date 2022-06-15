@@ -1,9 +1,7 @@
-# scrivere la soluzione qui...
 .globl f
 
 f:
-
-    movl $2,%eax
+    movl $2, %eax
     addl $3,%eax
 
     movl $4,%ecx
@@ -11,14 +9,12 @@ f:
 
     imull %ecx,%eax
 
-    movl $2,%edx
-    addl $3,%edx
+    movl $2,%ecx
+    addl $3,%ecx
 
-    subl %edx,%eax
-
+    subl %ecx,%eax
     imull $3,%eax
 
     incl %eax
-
-
     ret
+    

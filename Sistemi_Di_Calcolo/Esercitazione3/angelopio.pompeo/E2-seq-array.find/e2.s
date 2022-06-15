@@ -2,32 +2,31 @@
 
 .globl find
 
-find:       # int find(int* v, int n, int x) {
+find: 
 
-    movl $0,%ecx        #  i = 0
-    movl 4(%esp),%edx   # d = v
+    xorl %ecx,%ecx  # int i = 0;
+    movl 4(%esp),%eax # a = v
+L:
+    cmpl %ecx,8(%esp) 
+    jl E     # if(n<i){goto E;}
 
-S:
+    movl (%eax,%ecx,4),%edx
+
+    cmpl %edx,12(%esp) #    if(v[i] == x){
+    je E1 #         goto E1;
     
+    incl %ecx
+    #     i++;
+    jmp L #    goto L;
 
-              # ++i
-    incl %ecx 
-    cmpl 8(%esp),%ecx   # i < n 
-    jge T
-
-        movl (%edx,%ecx,4),%eax # a = v[i]
-        cmpl 12(%esp),%eax  # a == x
-        je E                # goto E
+E1:
+    movl $1,%eax
+    jmp R
     
+    #    return 1;
+E:
+    movl $0,%eax
     
-    jmp S     # loop
-
-
-
-E: 
-    movl $1, %eax
-    ret
-
-T: 
-    movl $0, %eax
+    #    return 0;
+R:
     ret

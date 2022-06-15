@@ -4,16 +4,17 @@
 
 f:
     
-    movl 4(%esp),%eax
+    movl 4(%esp),%edx
 
+    movl %edx,%eax
     imull %eax,%eax
     imull $2,%eax
 
-    movl $7,%ecx
-    imull 4(%esp),%ecx
+    movl $7, %ecx
+    imull %edx,%ecx
 
-    sub %ecx,%eax
+    subl %ecx,%eax
     incl %eax
 
     ret
-
+    

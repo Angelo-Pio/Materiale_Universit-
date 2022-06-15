@@ -1,0 +1,4 @@
+C
+un processo passa allo stato waiting a seguito di
+una chiamata a system call solo se si trova
+in stato running

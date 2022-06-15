@@ -1,0 +1,15 @@
+B
+
+La legge di Amdahl ci dice che lo speedup
+complessivo si calcola come :
+
+    S = 1/(a/k)+1-a
+
+sapendo che:
+
+S = 1,5
+k = 2
+
+e ponendo a come la nostra incognita si ottiene risolvendo l'equazione che:
+
+a = 0,66...

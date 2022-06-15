@@ -2,12 +2,13 @@
 
 comp:
 
-	movl 4(%esp),%ecx
+	movl 4(%esp),%eax
 	movl 8(%esp),%edx
-
-	subl %edx,%ecx
-	movl %ecx,%eax
 	
-	ret
+	movl (%eax),%eax
+	movl (%edx),%edx
 
+	subl %edx,%eax
+
+	ret
 	

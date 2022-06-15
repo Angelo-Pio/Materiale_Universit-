@@ -1,48 +1,36 @@
-
 .globl counteq
 
 counteq:
 
-    pushl %ebx
     pushl %esi
     pushl %edi
 
+    xorl %eax,%eax # a = 0 counter
+    xorl %edx,%edx # d = 0 i
+
+L:
+    movl 12(%esp),%esi
     movl 16(%esp),%edi
-    movl 20(%esp),%esi
-    movl 24(%esp),%edx
-    xorl %eax,%eax # a = 0
-    decl %edx
+    
+    cmpl 20(%esp),%edx
+    jge E 
 
-L:    testl %edx,%edx
-    jl E                # goto E
+        movw (%esi,%edx,2),%si
+        movw (%edi,%edx,2),%di
 
-        movw (%edi,%edx,2), %cx # c = vi1[i]
-        movw (%esi,%edx,2), %bx # b = vi2[i]
-
-        cmpw %cx,%bx
+        cmpw %si,%di
         sete %cl
-        movsbl %cl,%ecx
+
+        movzbl %cl,%ecx
         addl %ecx,%eax
 
-
-    decl %edx
+    incl %edx
     jmp L
+
 E:
     popl %edi
     popl %esi
-    popl %ebx
 
     ret
+    
 
-
-# int c = 0;
-# int a = 0;
-# 
-# 
-
-# 
-#   short b = *(vi1 + c)
-#   short d = *(vi2 + c)
-#     if(*(b+c) == *(d+c)) a++
-# 
-# return a 
