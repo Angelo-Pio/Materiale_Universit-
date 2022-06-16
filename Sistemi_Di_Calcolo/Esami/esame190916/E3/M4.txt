@@ -1,0 +1,13 @@
+Risposta: C
+
+movl %edx, %eax |   F D E M W
+addl $1, %ebx   |     F D E M W      
+stallo          |       - - - - -
+stallo                    - - - - -
+subw %ax, %cx   |           F D E M W               
+movl %ebx, %esi |             F D E M W  
+
+cicli di clock      _ _ _ _ _ _ _ _ _ _ 
+
+
+20'' per parte di teoria

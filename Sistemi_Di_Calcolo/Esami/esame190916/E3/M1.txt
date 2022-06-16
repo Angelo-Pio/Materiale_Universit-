@@ -1,0 +1,22 @@
+Risposta: B
+
+(offset) d : 12
+pagine a v bit con v = 16
+Indirizzo di pagina: p = v-d = 4
+
+Prendo i primi 4 bit significativi che corrispondono ad una cifra esadecimale
+dell' indirizzo logico con offset 12
+
+0x|0|4AD -> prendo in esame p = 0 
+
+seleziono dalla tabella delle pagine l'indirizzo x ad indice 0 -> x = 0x9
+
+sostituisco x a p e ottengo l'indirizzo fisico y = 0x94AD
+
+ripeto per tutti gli indirizzi lo stesso ragionamento
+
+
+
+
+
+

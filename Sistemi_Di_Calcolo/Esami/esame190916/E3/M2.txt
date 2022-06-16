@@ -1,0 +1,7 @@
+Risposta:   B
+
+Utente: 100+010+001 = 111 (binario) -> 7 (decimale)
+Gruppo: 100+001 = 101 (bin) -> 5 (decimale)
+Altri Utenti: 001 (bin) -> 1 (decimale)
+
+Ottale: 0751
