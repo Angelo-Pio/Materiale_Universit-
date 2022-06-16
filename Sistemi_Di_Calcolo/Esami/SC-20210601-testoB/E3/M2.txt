@@ -1,0 +1,29 @@
+Risposta:   
+
+
+numero pagine: dimensione tabella / dimensione entry
+dimensione pagine: dimensione spazio logico / numero pagine
+
+dim tabella: 1MB = 2^10
+dim spazio logico = 2^32
+dim entry = 2^2
+
+num pagine = 2^10/2^2 = 256 = 2^8
+dim pagina = 2^32/2^8 = 2^4 = 16KB 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
