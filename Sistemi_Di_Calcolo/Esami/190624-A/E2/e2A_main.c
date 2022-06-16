@@ -1,7 +1,7 @@
-#include "e2A.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include "e2A.h"
 
 int score, trials;
 
