@@ -1,0 +1,11 @@
+Risposta:B
+
+numero pagine = dim tabella / dim entry
+dim pagina = dim tot spazio logico / num pagine
+
+dim tabella = 2KB = 2^11
+dim spazio logico = 2^20
+dim entry = 2^2
+
+num pagine = 2^11/2^2 = 512 = 2^9
+dim pagina = 2^20/2^9 = 2048 byte = 2KB

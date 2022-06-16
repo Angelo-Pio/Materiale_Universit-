@@ -1,0 +1,5 @@
+Risposta:  B
+
+
+40 : 0.02 = x : 0.98
+x = 1960 usec -> 1.96 msec

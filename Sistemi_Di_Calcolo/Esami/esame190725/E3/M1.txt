@@ -1,0 +1,10 @@
+Risposta: C
+
+k = 3.5
+S = 1.4
+
+formula di Amhdal: S = 1/(a/k)+1-a
+
+1.4 = 1/(a/3.5)+1-a -> a = 2/5 =0.4 = 40%
+
+20"
