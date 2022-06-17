@@ -2,52 +2,47 @@
 .globl count_tokens
 
 count_tokens: # int count_tokens(char* str, const char* sep) {
-    
-    pushl %ebx
-    pushl %esi
+
     pushl %edi
+    pushl %esi
+    pushl %ebx
     subl $8,%esp
-    xorl %ecx,%ecx # int c = 0;
-    
-    movl 24(%esp),%ebx # char* b = str;
-    movl 28(%esp),%esi # const char* si = sep;
 
 
-    #     char * c = strtok(b,si);
-    movl %ebx,(%esp)
+    movl $0,%ebx # int b = 0;
+
+    movl 28(%esp),%esi # const char* esi = sep;
+    movl 24(%esp),%edi # char* c = str;
+
+    movl %edi,(%esp)
     movl %esi,4(%esp)
     call strtok
-    movl %eax,%esi
+    # char* a = strtok(c,esi);
 
 L:
-    cmpl $0,%esi #  if(c == NULL) goto E;
-    je E
-        
+    cmpl $0,%eax # if(a  == 0) goto E;
+    je E 
 
-        movl $0,%ebx # b = 0;
-        movl %ebx,(%esp)
+        movl $0,(%esp)
+        movl %esi,4(%esp)
+        call strtok # a = strtok(NULL,esi);
 
-        call strtok # a = strtok(b,si);
-
-        movl %eax,%esi
-        incl %ecx #c++;
-    
+    incl %ebx # b++;
     jmp L # goto L;
 
 E:
-    movl %ecx,%eax
+    movl %ebx,%eax
 
     addl $8,%esp
-    popl %esi
     popl %ebx
-
-	ret # return a;
-
-
-# y 24
-# x 20 
-# rit 16
-# bi 12
-# si 8
-# par2 -> 4
-# par1
+    popl %esi
+    popl %edi
+    ret # return b;    
+#sep 28
+#str 24
+#rit 20
+#di 16
+#si 12
+#b 8
+#y 4
+#x 0
