@@ -86,8 +86,7 @@ public class Driver {
             System.out.print("------------------\n");
 
         } else if (argv[0].equals("array")) {
-            
-            System.out.print("Given:\n\t  17, 3, 100, 25, 1, 2, 7, 19, 36  \n");
+
             int[] a = new int[]{17, 3, 100, 25, 1, 2, 7, 19, 36};
             Heap h = Heap.array2heap(a, Heap.HEAP_TYPE.MAX_HEAP);
             System.out.print("Heap is:\n\t");
