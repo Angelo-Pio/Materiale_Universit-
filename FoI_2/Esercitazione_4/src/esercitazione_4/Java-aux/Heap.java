@@ -60,19 +60,46 @@ public class Heap {
         int i = e.getPosition();
         int j = getParent(i);
         
-        while(j != -1 && !compare(i,j)){
-            
-            swap(i, j);
-
-            i = j;
-            j = getParent(i);
-        }
+        upHeap(i, j);
+        
 
         // incrementa la size
         size++;
         return e;
     }
 
+    public void upHeap(int i, int j){
+        while(j != -1 && compare(i,j)){
+            
+            swap(i, j);
+
+            i = j;
+            j = getParent(i);
+        }
+    }
+
+    public void downHeap(int i){
+
+        while (hasLeft(i)) {
+            this.print();
+            System.out.println("");
+
+            int l = getLeftChild(i);
+            int c = l;
+            if(hasRight(i)){
+                int r = getRightChild(i);
+                if(!compare(l, r)){
+                    c = r;
+                }
+            }
+
+            if(compare(i,c)) break;
+
+            swap(i, c);
+            i = c;
+        }
+
+    }
     
     public int poll() {
 
@@ -96,27 +123,34 @@ public class Heap {
         size--;
 
         // Fai down-heap bubbling
-            int c;
-            int index = 0;
-            // Scegli il figlio con cui fare la comparazione
-            do{
-                if(heap[getRightChild(index)] == null) {
-                    c = getLeftChild(index);
-                }else{
-                    c = getComparisonChild(index);
-                }
-
-                swap(c,index);
-
-                index = c;
-
-            }while(index < size && compare(c, index));
+            int i = 0;
+    
+            downHeap(i);
 
         return radKey;
     }
+
+  
     
     public static Heap array2heap(int[] array, HEAP_TYPE type) {
-        return null;
+
+        Heap res = new Heap(type, array.length);
+
+        for(int i = 0; i < array.length; i++){
+            
+            res.heap[i] = new HeapEntry(array[i], i);
+        }
+        res.size = array.length;
+
+        int j = res.getParent(res.size() - 1 );
+        for(;j >= 0 ; j--){
+            // Fai down-heap bubbling
+            res.downHeap(j);
+            
+        }
+
+        
+        return res;
     }
     
     public static void heapSort(int[] array) {
@@ -124,46 +158,69 @@ public class Heap {
     }
     
     public void updateEntryKey(HeapEntry e, int key) {
-        return;
+        int pos = e.getPosition()-1;
+        int temp = heap[pos].key ;
+
+            // System.out.printf("POS: %d",pos);
+        heap[pos].key = key;
+        
+        // Mantiene Heap Order 
+        if(compare(pos, getParent(pos))){
+            upHeap(pos, getParent(pos));
+        }else{
+                downHeap(pos);
+        }
+
     }
     
     
     // Aux functions
+
+    public boolean hasLeft(int i){
+        return getLeftChild(i) < this.size();
+    }
+    
+    public boolean hasRight(int i){
+        return getRightChild(i) < this.size();
+    }
+
     private boolean compare(int i, int j) {
     if(type == HEAP_TYPE.MIN_HEAP){
-        return heap[i].getKey() >= heap[j].getKey(); 
+            return heap[i].getKey() < heap[j].getKey(); 
         }else{
-            return heap[i].getKey() <= heap[j].getKey(); 
+            return heap[i].getKey() > heap[j].getKey(); 
             
         }
     }
     
-    private int getComparisonChild(int index) {
+    private static int getComparisonChild(Heap struct , int index) {
 
-        int r = heap[getRightChild(index)].getKey();
-        int l = heap[getLeftChild(index)].getKey(); 
+        int rightChild = 2*index+2;
+        int leftChild = 2*index+1;
 
-        if(type == HEAP_TYPE.MIN_HEAP){
+        int r = struct.heap[rightChild].key;
+        int l = struct.heap[leftChild].key; 
+
+        if(struct.type == HEAP_TYPE.MIN_HEAP){
 
             if(l <= r ){
-                return getLeftChild(index);
+                return leftChild;
             }else{
 
-                return getRightChild(index);
+                return rightChild;
             }
             
             
         }else{
             
             if(l >= r ){
-                return getLeftChild(index);
+                return leftChild;
             }else{
                 
-                return getRightChild(index);
+                return rightChild;
             }
         }
     }
-
 
     void swap (int i , int j){
         HeapEntry temp = heap[j];
@@ -175,7 +232,6 @@ public class Heap {
         heap[i].setPosition(j);
     }
     
-    
     private void increaseHeapCapacity() {
         HeapEntry[] temp = new HeapEntry[capacity*2];
         for (int i = 0; i < capacity; i++) {
@@ -185,35 +241,25 @@ public class Heap {
         capacity = capacity*2;
     }
 
-    int getParent(int pos){
+    public int getParent(int pos){
         if(pos <= 0){
             return 0;
         } 
         return (pos - 1)/2 ;
     }
 
-    int getLeftChild (int pos) throws ArrayIndexOutOfBoundsException{
+    public int getLeftChild (int pos) {
         
-        int lpos = 2 * pos + 1;
-        if(lpos > capacity-1){
-            throw new ArrayIndexOutOfBoundsException();
-        }else{
-
-            return lpos ;
-        }
+        return 2 * pos + 1;
+        
     }
 
-    int getRightChild (int pos) throws ArrayIndexOutOfBoundsException{
+    public int getRightChild (int pos) {
         
-        int rpos = 2 * pos + 2;
-        if(rpos > capacity-1){
-            throw new ArrayIndexOutOfBoundsException();
-        }else{
-
-            return rpos ;
-        }
+       return 2 * pos + 2;
+      
+      
     }
-
 
     public HEAP_TYPE getType() {
         return type;
@@ -232,8 +278,6 @@ public class Heap {
         return size;
     }
 
-
-    
     public void print() {
         
         

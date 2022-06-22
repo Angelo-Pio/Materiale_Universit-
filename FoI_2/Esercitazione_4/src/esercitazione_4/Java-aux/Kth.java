@@ -1,5 +1,7 @@
 public class Kth {
 
+    
+
     public Kth(int k) {}
 
     public void insert(int key) {
