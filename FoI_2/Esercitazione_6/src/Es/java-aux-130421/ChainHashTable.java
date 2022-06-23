@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class ChainHashTable extends AbstractHashTable {
 	// Un array di LinkedList per le liste di trabocco 
@@ -23,113 +24,93 @@ public class ChainHashTable extends AbstractHashTable {
 
 	// Inizializza una tabella hash vuota secondo i parametri passati al costruttore
 	protected void createTable() {
-            int cap = this.getCapacity();
-            this.table = (LinkedList<Entry>[]) new LinkedList[cap];
-        }
+		int c = getCapacity();
+		table = new LinkedList[c];
+		for (int i = 0; i < getCapacity(); i++) {
+			table[i] = new LinkedList<Entry>();
+		}
+	}
 
 	// Restituisce il valore (intero) associato alla chiave k
 	// Restituisce -1 se la chiave è assente
 	public int get(String k) {
-	   
-            if(size() == 0) return -1;
-            
-            int index = hashFunction(k);
-            LinkedList<Entry> list = table[index];
-            
-            if(list == null) return -1;
-            
-            for (int j = 0; j < list.size(); j++) {
-                
-                Entry entry = list.get(j);
-                
-                if(entry.getKey() == k){
-                    
-                    return entry.getValue();
-                }
-            }	
-            return -1;
-                
+		int hashcode = super.hashFunction(k);
+
+		for(int i = 0; i < table[hashcode].size() ; i++){
+
+			Entry e = table[hashcode].get(i);
+			if( e.getKey() == k){
+				
+				return e.getValue();
+			}
+		}
+
+		return -1;
 	}
 	
 	// Aggiorna il valore associato alla chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int put(String k, int value) {
-            
-            int old = -1;
-            
-            if(size() + 1 < getCapacity() * getMaxLambda()){
-                resize(2*getCapacity() - 1);
-            }
-            
-            int index = hashFunction(k);
-            LinkedList<Entry> list = table[index];
-            
-            if(list == null){
-                
-                list = new LinkedList<>();
-                list.addLast(new Entry(k, value));
-                incSize();
-                
-            }else{
-            
-                for (int j = 0; j < list.size(); j++) {
 
-                    Entry entry = list.get(j);
+		// Tener conto del maxLamda e del resizing
 
-                    if(entry.getKey() == k){
+		
 
-                        old = entry.getValue();
-                        entry.setValue(value);
-                    }
-                }
-                
-                if(old == -1){list.addLast(
-                        new Entry(k, value)); 
-                        incSize();
-                }
-                
-            }
-            
-            return old;
-            
-        }
+		int hashcode = hashFunction(k);
+		LinkedList<Entry> entryList = table[hashcode];
+		for(int i = 0; i < entryList.size() ; i++){
+
+			Entry e = entryList.get(i);
+			int entryValueOld = e.getValue();
+			if( e.getKey() == k){
+				e.setValue(value);
+				incSize();
+				return entryValueOld;
+			}
+		}
+
+		entryList.add(new Entry(k, value));
+		incSize();
+
+		checkSize();
+
+		return -1;
+	}
 	
 	
 	// Rimuove la coppia con chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int remove(String k) {
-            if (isEmpty())
-			return -1;
-		int i = hashFunction(k);
-		if (table[i] == null)
-			return -1;
-		for (Entry e: table[i])
-			if (e.getKey().equals(k)) {
-				int old = e.getValue();
-				table[i].remove(e);
+		
+		int hashcode = super.hashFunction(k);
+
+		for(int i = 0; i < table[hashcode].size() ; i++){
+
+			Entry e = table[hashcode].get(i);
+			if( e.getKey() == k){
+				
+				int entryValueOld = e.getValue();
+				table[hashcode].remove(i);
 				decSize();
-				if (table[i].size() == 0)
-					table[i] = null;
-				return old;
+				return entryValueOld;
 			}
+		}
+
 		return -1;
-        }
+	}
 	
 	// Restituisce un oggetto Iterable contenente tutte le coppie presenti
 	// nella tabella hash
 	public Iterable<Entry> entrySet() {
-            LinkedList<Entry> pairs;
-		if (isEmpty())
-			return null;
-		pairs = new LinkedList<Entry>();
-		for (int i = 0; i < table.length; i++)
-			if (table[i] != null)
-				for (Entry e: table[i])
-					pairs.addLast(e);
-		return pairs;
-            
+
+		ArrayList<Entry> list = new ArrayList<>(super.size());
+
+		for (LinkedList<Entry> linkedList : table) {
+			for (Entry entry : linkedList) {
+				list.add(entry);
+			}
+		}
+		return list;
 	}
 
 }
-
-

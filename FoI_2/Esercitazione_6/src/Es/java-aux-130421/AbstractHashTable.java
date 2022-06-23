@@ -1,5 +1,5 @@
 import java.util.Random;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 public abstract class AbstractHashTable {
 	private int capacity; // dim. tabella
@@ -57,16 +57,32 @@ public abstract class AbstractHashTable {
 	// Si ricordi che ogni oggetto Java implementa hashcode, 
 	// a cominciare dalle stringhe
 	protected int hashFunction(String k) { 
-            int hCode = k.hashCode();
-            return compFunction(hCode);
-        }
+		int hashvalue = k.hashCode();
+		return 	(int)(Math.abs((a*hashvalue+b)%prime)%capacity);
+	}
 
-    protected int compFunction(int hCode) {
-        return (int) (Math.abs(hCode*a + b)%prime)%capacity;
+	protected void checkSize (){
+        long loadFactor = size()/getCapacity();
+        if(!(loadFactor < getMaxLambda())){
+            resize(getCapacity()*2 -1);
+        }
     }
-	
+
 	// metodo che aggiorna la dimensione della tabella hash	(N)
 	protected void resize(int newCap) { 	
+
+		Iterable<Entry> it = entrySet();
+		capacity = newCap;
+		createTable();
+
+		for (Entry entry : it) {
+			if(entry == null){
+				continue;
+			}
+			put(entry.getKey(),entry.getValue());
+		}
+
+
 		return;
 	}
 		
@@ -89,38 +105,38 @@ public abstract class AbstractHashTable {
 	
 	// incrementa il numero n di chiavi presenti
 	public void incSize() { 
-                 n++;
+		n++;
 		return;
 	}
 	
 	// decrementa il numero n di chiavi presenti
 	public void decSize() { 
-                 if(n > 0) n--;
+		n--;
 		return;
 	}
 	
 	// restituisce valore max. per il fattore di carico (si effettua resize se superato)
 	public double getMaxLambda() { 
-            
-           
-            return maxLambda;
-            
-        }
+		return maxLambda;
+	}
 	
 	// Stampa una rappresentazione delle coppire presenti secondo
     // il formato [(k1, v1),(k2,v2), ... ,(kn, vn)]
 	public void print() {
-            
-            if (isEmpty()) {
-			System.out.println("[]");
-			return;
+		System.out.printf("[");
+
+		Iterable<Entry> it = entrySet(); 
+
+		for (Entry entry : it) {
+			if(entry == null){
+				System.out.printf("(null)");
+			}else{
+				System.out.printf(entry.toString());
+			}
+			System.out.printf(",");
 		}
-		String s = "["; // Almeno una coppia presente
-		for (Entry e: entrySet()) 
-			s = s + e.toString() + ",";
-		s = s.substring(0, s.length() - 1) + "]";
-		System.out.println(s);
-            
+
+		System.out.printf("]\n");
 	}
 	
 	// Metodi astratti da implementare nelle sottoclassi

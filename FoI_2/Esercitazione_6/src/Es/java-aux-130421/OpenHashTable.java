@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class OpenHashTable extends AbstractHashTable {
@@ -24,85 +25,111 @@ public class OpenHashTable extends AbstractHashTable {
 
 	// Inizializza una tabella hash vuota secondo i parametri passati al costruttore
 	protected void createTable() {
-            table = new Entry[this.getCapacity()];
-            return;
-	}
+        table = new Entry[getCapacity()];
+    }
 
 	// Restituisce il valore (intero) associato alla chiave k
 	// Restituisce -1 se la chiave è assente
 	public int get(String k) {
-	
-            int position = hashFunction(k);
-            
-            if(size() == 0){
-                return -1;
-            }
-            Entry couple = table[position];
-            
-            if(couple == null){
-                return -1;
-            }
-            
-            if(couple.equals(DEFUNCT)){
-                for (int i = position; i < table.length; ++i) {
-                    int pos = quadProb(position, i);
-                    if(table[pos].getKey() == k){
-                        return table[pos].getValue();
-                    }
-                }
-                return -1;
-            }
-            
-            return couple.getValue();
+
+        // Calcola l'hashcode
+        int f = find(k);
+
+        if(f != -1){
+            return table[f].getValue();
+        }
+
+		return f;
 	}
 	
-        protected int quadProb(int hash, int i){ return (hash + (i*i)) % this.getCapacity();}
-        
+    private int find(String k){
+        // Restituisce la posizione in cui si trova k
+        int hashcode = hashFunction(k);
+
+        for (int i = hashcode; i < getCapacity(); i = hashcode + i*i ) {
+            if(table[i] == null){
+                return -1;
+            }
+            if(table[i].equals(DEFUNCT)){
+                continue;
+            }
+            if(table[i].getKey() == k){
+                return i;
+            }
+        }
+
+        return -1;
+
+
+    }
+
+
 	// Aggiorna il valore associato alla chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int put(String k, int value) {
-		
-            int position = hashFunction(k);
-            
-            Entry couple = table[position];
-            
-            if(couple == null){
-                couple.setValue(value);
-                return -1;
+
+
+        int h = hashFunction(k);
+        int r = 0;
+        for (int i = h; i < getCapacity(); i = h+i*i) {
+            if(table[i] == null){
+                r = i;
+                break;
             }
-            
-            if(couple.equals(DEFUNCT)){
-                
-                int p = position;
-                
-                for (int i = position; i < table.length; ++i) {
-                    int pos = quadProb(position, i);
-                    if(table[pos].getKey() == k){
-                        return table[pos].getValue();
-                    }
-                }
-                return -1;
+            if(table[i].equals(DEFUNCT)){
+                r = i;
             }
-            
-            int old = couple.getValue();
-            couple.setValue(value);
-            
-            return old;
+            if(table[i].getKey() == k){
+                int old = table[i].getValue();
+                table[i].setValue(value);
+                incSize();
+                return old;
+            }
+        }
+
+        table[r] = new Entry(k, value);
+        incSize();
+
+        checkSize();
+
+
+		return -1;
 	}
 	
+    
 	
 	// Rimuove la coppia con chiave k
 	// Restituisce il vecchio valore o -1 se la chiave non è presente
 	public int remove(String k) {
+
+        int h = hashFunction(k);
+        for (int i = h; i < getCapacity(); i = h+i*i) {
+            if(table[i] == null){
+                break;
+            }
+            if(table[i].equals(DEFUNCT)){
+                break;
+            }
+            if(table[i].getKey() == k){
+                int old = table[i].getValue();
+                table[i] = DEFUNCT;
+                decSize();
+                return old;
+            }
+        }
+
 		return -1;
 	}
 	
 	// Restituisce un oggetto Iterable contenente tutte le coppie presenti
 	// nella tabella hash
 	public Iterable<Entry> entrySet() {
-		return null;
-	}
+        ArrayList<Entry> list = new ArrayList<>(getCapacity());
+        for (Entry entry : table) {
+            list.add(entry);
+        }
+        return list;
+    }
 	
 }
-
 
