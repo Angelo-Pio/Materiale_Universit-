@@ -1,128 +1,156 @@
+import org.w3c.dom.Node;
+
 public class BST<V> {
 
+    Node<V> root ;
+    
+    private class Node<V> {
+        int key;
+        V value;
+        Node<V> sin = null;
+        Node<V> des = null;
 
+        public Node(int k, V v){
+            this.key = k;
+            this.value = v;
 
-    private class Node<V>{
-        protected int key;
-        protected V value;
-        
-        protected Node<V> left;
-        protected Node<V> right;
-        
-        public Node(int key, V value) {
-            this.key = key;
-            this.value = value;
         }
-
-        public int getKey() {
-            return key;
-        }
-
-        public V getValue() {
-            return value;
-        }
-
-        public void setValue(V value) {
-            this.value = value;
-        }
-        
-        
-        
-        
-        
         
     }
-    
-    public Node<V> radix;
-    
+
     public BST(int key, V value) {
-        radix = new Node<>(key,value);
+        root= new Node<>(key, value);
     }
 
-    
-    private void insert(Node<V> radix, int k, V v) {
-        
-        if(radix.getKey() == k){
-            radix.setValue(v);
-        }
-        
-        if(k < radix.getKey()){
-            
-            if(radix.left == null){
-                radix.left = new Node<>(k,v);
-            }else{
-                insert(radix.left,k,v);
-            }
-            
-        }else{
-            if(radix.right == null){
-                radix.right = new Node<>(k,v);
-            }else{
-                insert(radix.right,k,v);
-            }
-        }
-        
-    }
-    
+
     public void insert(int k, V v) {
-            
-        if(radix == null){
-            radix = new Node(k, v);
+        if(this.root == null){
+            root = new Node<V>(k, v);
         }else{
-            insert(radix,k,v);
+            insert(this.root,k,v);
         }
-        
-        
-        
     }
 
+    private void insert(BST<V>.Node<V> node, int k, V v) {
+        if(node.key == k){
+            node.value = v;
+        }
+        if(k < node.key){
+
+            if(hasLeft(node)){
+                insert(node.sin, k, v);
+            }else{
+                node.sin = new Node<V>(k, v);
+            }
+            
+            
+        }else{
+            
+            if(hasRight(node)){
+                insert(node.des, k, v);
+            }else{
+                node.des = new Node<V>(k, v);
+            }
+        }
+    }
+
+
+    public V find(Node<V> node , int k) {
+
+        // Chiave non presente ritorna il nodo
+        if(node.equals(null)){
+            return null;
+        }
+        // Chiave trovata, ritorna il nodo
+        if(node.key == k){
+            return node.value;
+        }
+        // Cerca in preordine nell'albero 
+        if(node.key < k && hasLeft(node)){
+            return find(node.sin,k); 
+        }
+        else if(node.key > k && hasRight(node)){
+            return find(node.des,k); 
+        }else{
+            return null;
+        }
+
+    }
     public V find(int k) {
-        
-        if(radix == null)
-             return null;
-        else
-            return findNode(radix,k).getValue();
-        
+
+        V b = find(this.root,k);
+        if(b != null){
+            return b;
+        }else{
+            return null;
+        }
+
     }
 
-    
-    public Node<V> findMin(Node<V> r){
-        
-        if(r.left == null){
-            return r ;
-        }
-        return findMin(r.left);
-        
+    private boolean hasLeft(Node<V> node) {
+        return node.sin != null;
     }
     
-    public int findMin() {
-        
-        if(radix == null){
+    private boolean hasRight(Node<V> node) {
+        return node.des != null;
+    }
+
+    public int findMin(Node<V> node) {
+        // Chiave non presente ritorna il nodo
+        if(!hasLeft(node)){
+            return node.key;
+        }
+        // Cerca in preordine nell'albero 
+        else{
+            return findMin(node.sin); 
+        }
+    }    
+
+    public int findMin(){
+        if(this.root.equals(null)){
             return -1;
         }else{
-           return findMin(radix).getKey(); 
+            return findMin(this.root);
         }
-        
-    }
-    
-    private void removeMin(Node<V> r){
-        return;
     }
     
     public void removeMin() {
         
-        if(radix == null){
+        if(this.root.equals(null)){
             return;
         }else{
-            removeMin(radix);
+            removeMin(this.root);
         }
-        
-        
     }
 
-    public void remove(int k) {
-        return;
+    private Node<V> removeMin(Node<V> node) {
+
+        if(!hasLeft(node)){
+            return node.des;
+        }
+            node.sin = removeMin(node.sin);
+        return node;
     }
+
+
+    public void remove(int k) {
+        if(this.root == null){
+            return;
+        }
+        remove(this.root, k);
+    }
+
+    public boolean hasTwoChildren(Node<V> node){
+        return 
+    }
+
+    private void remove(Node<V> node, int k) {
+
+        
+
+
+    }
+
 
     private void print(Node<V> t, int level) {
 
@@ -139,66 +167,15 @@ public class BST<V> {
 
         System.out.println(t.key);
 
-        print(t.left, level + 1);
-        print(t.right, level + 1);
+        print(t.sin, level + 1);
+        print(t.des, level + 1);
     }
 
     void print(){
-        print(this.radix, 0);
+        print(this.root, 0);
     }
 
-    int predecessor(Node<V> n){
-        
-        //Se ha figlio sinistro cerca lì dentro il minimo
-        if(n.left != null){
-            return findMax(n.left).getKey();
-        }
-       
-        
-        
-        
-    }
-    
-    
-    private Node<V> findMax(Node<V> r){
-        
-        if(r.right == null){
-            return r ;
-        }
-        return findMin(r.right);
-        
-    }
-    
-    
     int predecessor(int k) {
-        
-        predecessor(findNode(radix, k));
-
+        return 0;
     }
-    
-    protected Node<V> findNode(Node<V> rad , int k){
-        
-        if( rad == null){
-            return rad;
-        }
-        
-        if(rad.getKey() == k){
-            return rad;
-        }
-
-        if( k < rad.getKey()){
-            return findNode(rad.left,k);
-        }
-
-        if( k > rad.getKey()){
-            return findNode(rad.right,k);
-        }
-        
-         return null;   
-    }
-    
-    protected boolean estFoglia(Node<V> rad){
-        return rad.left == null && rad.right == null;
-    }
-
 }
