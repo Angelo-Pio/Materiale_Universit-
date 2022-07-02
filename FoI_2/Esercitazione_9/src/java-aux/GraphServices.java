@@ -1,5 +1,9 @@
+import java.util.LinkedList;
+import java.util.List;
+
 
 public class GraphServices<V> {
+
 
     public enum EdgeType {
         TREE, BACK, FORWARD, CROSS
@@ -7,87 +11,107 @@ public class GraphServices<V> {
 
     public static <V> void topologicalSort(Graph<V> g) {
 
+        StringBuffer str = new StringBuffer();
+
+        for (Graph.GraphNode<V> node : g.getNodes()) {
+            if(node.inEdges.size() == 0){
+                topDFS(node,str);
+                if(str.toString() == "Not a DAG"){
+                    break;
+                }
+            }
+        }
+
+        str.append(",");
+        System.out.println(str.toString());
+    }
+
+    private static <V> void topDFS(Graph.GraphNode<V> node, StringBuffer str) {
+        
+        node.state = Graph.GraphNode.Status.EXPLORED;
+
+        for (Graph.GraphNode<V> n : node.outEdges) {
+            if(n.state == Graph.GraphNode.Status.UNEXPLORED){
+                topDFS(n, str);
+            }
+            else{
+                str.replace(0, str.capacity(), "Not a DAG");
+                return;
+            }
+        }
+       
+        
     }
 
     public static <V> void strongConnectedComponents(Graph<V> g) {
 
+        // Idea: Creare due liste di componenti connesse
+        // Una a partire da G ed un'altra a partire da G trasposto
+        // se vi sono due componenti connesse uguali allora si ha una componente fortemente connessa
+
     }
 
     
-    // Nel codice c'è un piccolo errore: non si tiene conto di quando un nodo è stato esplorato
-    // bisogna lavorare con il timestamp del nodo per classificare correttamente un arco cross o forward
     
     public static <V> void sweep(Graph<V> g) {
 
-        g.resetStatus();
+        List<Graph.GraphNode<V>> nodes = g.getNodes();
+        for(Graph.GraphNode<V> n : nodes){
+            if(n.state == Graph.GraphNode.Status.UNEXPLORED){
 
-        for (Graph.GraphNode<V> node : g.getNodes()) {
-            if (node.state != Graph.GraphNode.Status.EXPLORED) {
-                DFS_classification(node);
+                sweep_aux(n);
             }
         }
+       
 
     }
 
-    private static <V> void DFS_classification(Graph.GraphNode<V> node) {
+    public static <V> void printEdgeType(Graph.GraphNode<V> node, Graph.GraphNode<V> n , String type){
+        System.out.println(node.value + "->" + n.value + " : {"+type+"}");
+    }
 
-        for (Graph.GraphNode<V> outEdge : node.outEdges) {
-            EdgeType type = EdgeType.TREE;
-
-            switch (outEdge.state) {
-
-                case EXPLORING:
-                    type = EdgeType.BACK;
-                    break;
-                case EXPLORED:
-                    if (node.state != Graph.GraphNode.Status.EXPLORED) { 
-                        type = EdgeType.CROSS;
-                    } else {
-                        type = EdgeType.FORWARD;
-                    }
-                    break;
-            }
-
-            printEdgeType(node, outEdge, type);
-
-        }
-
-        if (node.state != Graph.GraphNode.Status.UNEXPLORED) {
-            return;
-        }
-
+    public static <V> void sweep_aux(Graph.GraphNode<V> node){
+    
         node.state = Graph.GraphNode.Status.EXPLORING;
-
-        for (Graph.GraphNode<V> outEdge : node.outEdges) {
-            if (outEdge.state == Graph.GraphNode.Status.UNEXPLORED) {
-                DFS_classification(outEdge);
+        node.timestamp++;
+        
+        for (Graph.GraphNode<V> n : node.outEdges) {
+            if(n.state == Graph.GraphNode.Status.UNEXPLORED){
+                
+                printEdgeType(node, n, "TREE");
+                
+                sweep_aux(n);
+                
+                
+                
+            }else if(n.state == Graph.GraphNode.Status.EXPLORING){
+                
+                printEdgeType(node, n, "BACK");
+            }
+            else{
+                if(n.timestamp > node.timestamp){
+                    printEdgeType(node, n, "FORWARD");
+                }else{
+                    printEdgeType(node, n, "CROSS");
+                    
+                }
+                return;
             }
         }
-
+        
         node.state = Graph.GraphNode.Status.EXPLORED;
 
     }
 
-    private static <V> void printEdgeType(Graph.GraphNode<V> node, Graph.GraphNode<V> outEdge, EdgeType type) {
-        String type_s = "";
+    // Sweep:
+    // Visita il grafo tramite dfs
+    // Ogni volta che viene visitato incrementa il suo timestamp
+    // Un nodo passa per tre stadi UNEXPLORED -> EXPLORING -> EXPLORED
 
-        switch (type) {
-            case TREE:
-                type_s = "TREE";
-                break;
-            case FORWARD:
-                type_s = "FORWARD";
-                break;
-            case BACK:
-                type_s = "BACK";
-                break;
-            case CROSS:
-                type_s = "CROSS";
-                break;
-        }
 
-        String buffer = node.value + " -> " + outEdge.value + " : " + '{' + type_s + '}';
-        System.out.println(buffer);
-    }
+
+
+
+    
 
 }
