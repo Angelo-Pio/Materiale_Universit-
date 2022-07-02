@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 
 public class Driver {
 
@@ -72,7 +73,13 @@ public class Driver {
         }
         else if(argv[0].equals("input")) {
         	File f = new File("graph.in");
-        	Graph<String> g = Graph.readFF(f);
+        	Graph<String> g;
+            try {
+                g = Graph.readFF(f);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         	System.out.println("Rappresentazione ad archi:");
         	System.out.println(g);
         	System.out.println("Rappresentazione adiacenze:");

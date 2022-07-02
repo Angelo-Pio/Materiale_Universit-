@@ -10,6 +10,9 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+
+
 public class Graph<V> {
 
     LinkedList<GraphNode<V>> nodes;
@@ -121,15 +124,17 @@ public class Graph<V> {
             g.numVertices = Integer.parseInt(tk.nextToken());
 
             for (int i = 0; i < g.numEdges; i++) {
-                StringTokenizer tok = new StringTokenizer(br.readLine()," ");
+                String str = br.readLine();
+                if(str == null) break;
+                StringTokenizer tok = new StringTokenizer(str," ");
                 
                 V val = (V)tok.nextToken();
                 g.addNode(val);
-                GraphNode<V> v1 = new GraphNode<V>(val);
+                GraphNode<V> v1 = g.nodes.getLast();
                 
                 val = (V)tok.nextToken();
                 g.addNode(val);
-                GraphNode<V> v2 = new GraphNode<V>(val);
+                GraphNode<V> v2 = g.nodes.getLast();
                 
                 g.addEdge(v1, v2);
             }
@@ -143,8 +148,12 @@ public class Graph<V> {
     }
 
     public String printAdj() {
-
-        return this.toString();
+        StringBuffer str = new StringBuffer();
+        for (GraphNode<V> graphNode : nodes) {
+            str.append(graphNode.value+"-");
+        }
+        str.append("\n"+this.toString());
+        return str.toString();
     }
 
     @Override
@@ -154,9 +163,10 @@ public class Graph<V> {
 
         str.append(this.numEdges+" " + this.numVertices+"\n\n");
         
+        resetStatus();
         printDFS(str);
+        resetStatus();
 
-        resetStatus(nodes.getFirst());
 
         return str.toString();
 
@@ -168,12 +178,20 @@ public class Graph<V> {
         }
     }
 
-    private void resetStatus(GraphNode<V> node) {
+    private void resetStatus(){
+        for (GraphNode<V> node : nodes) {
+            if(node.state == GraphNode.Status.EXPLORED){
+                resetStatus_aux(node);
+            }
+        }
+    }
+
+    private void resetStatus_aux(GraphNode<V> node) {
         node.state = GraphNode.Status.UNEXPLORED;
 
         for (GraphNode<V> n : node.outEdges) {
             if(n.state == GraphNode.Status.EXPLORED){
-                resetStatus(n);
+                resetStatus_aux(n);
             }
         }
     }
@@ -182,11 +200,19 @@ public class Graph<V> {
 
     public void printDFS_aux(StringBuffer buff, GraphNode<V> node){
         
+        if(node.state == GraphNode.Status.EXPLORING){
+            for (GraphNode<V> m : node.outEdges) {
+                if(m.state == GraphNode.Status.EXPLORED){
+                    buff.append((String)node.value + " " + m.value + "\n");
+                }
+            }
+        }
         node.state = GraphNode.Status.EXPLORED;
 
         for (GraphNode<V> n : node.outEdges) {
             if(n.state == GraphNode.Status.UNEXPLORED){
                 buff.append((String)node.value + " " + n.value + "\n");
+                n.state = GraphNode.Status.EXPLORING;
                 printDFS_aux(buff, n);
             }
         }
@@ -195,12 +221,62 @@ public class Graph<V> {
 
 
     public int nConComp() {
-        return 0;
+        int count = 0;
+        resetStatus();
+
+        for (GraphNode<V> node : nodes) {
+            if(node.state == GraphNode.Status.UNEXPLORED){
+                DFS(node);
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private void DFS(Graph.GraphNode<V> node) {
+        node.state = GraphNode.Status.EXPLORED;
+        for (GraphNode<V> n : node.outEdges) {
+            if(n.state == GraphNode.Status.UNEXPLORED){
+                DFS(n);
+            }
+        }
     }
 
     public List<Graph<V>> getConComp() {
-        return null;
+        List<Graph<V>> list = new LinkedList<Graph<V>>();
+        Graph<V> g = new Graph<>();
+        for (GraphNode<V> n : nodes) {
+
+            if(n.state == GraphNode.Status.UNEXPLORED){
+                DFS_Conn(n,g);
+                list.add(g);
+                g = new Graph<>();
+            }
+            
+        }
+        return list;
     }
+
+   
+
+    private void DFS_Conn(Graph.GraphNode<V> node, Graph<V> g) {
+
+        node.state = GraphNode.Status.EXPLORED;
+        for (GraphNode<V> n : node.outEdges) {
+            if(n.state == GraphNode.Status.UNEXPLORED){
+                g.nodes.add((GraphNode<V>)n.clone());
+                g.numVertices++;
+                g.numEdges++;
+                
+                DFS_Conn(n,g);
+
+            }
+        }
+
+    }
+
+
 
     public static class GraphNode<V> implements Cloneable {
 
