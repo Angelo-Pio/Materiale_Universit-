@@ -12,29 +12,28 @@ public class GraphServices<V> {
     public static <V> void topologicalSort(Graph<V> g) {
 
         StringBuffer str = new StringBuffer();
+        g.resetStatus();
 
         for (Graph.GraphNode<V> node : g.getNodes()) {
-            if(node.inEdges.size() == 0){
-                topDFS(node,str);
-                if(str.toString() == "Not a DAG"){
-                    break;
-                }
+            if(node.state == Graph.GraphNode.Status.UNEXPLORED){
+                topDFS(node, str);
+
             }
         }
 
-        str.append(",");
+        str.append(";");
         System.out.println(str.toString());
     }
 
     private static <V> void topDFS(Graph.GraphNode<V> node, StringBuffer str) {
         
-        node.state = Graph.GraphNode.Status.EXPLORED;
+        node.state = Graph.GraphNode.Status.EXPLORING;
 
         for (Graph.GraphNode<V> n : node.outEdges) {
             if(n.state == Graph.GraphNode.Status.UNEXPLORED){
                 topDFS(n, str);
             }
-            else{
+            if(n.state == Graph.GraphNode.Status.EXPLORING){
                 str.replace(0, str.capacity(), "Not a DAG");
                 return;
             }
@@ -45,9 +44,6 @@ public class GraphServices<V> {
 
     public static <V> void strongConnectedComponents(Graph<V> g) {
 
-        // Idea: Creare due liste di componenti connesse
-        // Una a partire da G ed un'altra a partire da G trasposto
-        // se vi sono due componenti connesse uguali allora si ha una componente fortemente connessa
 
     }
 
