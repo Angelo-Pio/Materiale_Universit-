@@ -1,23 +1,61 @@
+import java.security.KeyStore.Entry;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GraphServices {
 
 	
 	public static <V> void bfs(Graph<V> g) {
             
-            for (Node<V> node : g.getNodes()) {
-                if(node.stato != Node.Stato.EXPLORED){
-                    
-                    bfsFromNode(node,g);
-                    
-                }
+        for ( Node<V> v : g.getNodes()) {
+            if(v.stato == Node.Stato.UNEXPLORED){
+
+                bfsFromNode(v, g);
             }
+        }
             
 	}
 
 	public static <V> void sssp(Graph<V> g, Node<V> source) {
 
-	}
+        MinHeap<Node<V>> pqueue = new MinHeap<Node<V>>();
+
+		HashMap<Node<V>, HeapEntry<Node<V>>> dist = new HashMap<Node<V>, HeapEntry<Node<V>>>();
+
+
+		final int INFINITY = 100000; // = "Infinito"
+		// (NB.: deve essere maggiore della somma di tutti i pesi del grafo, altrimenti e' scorretto)
+
+		// Inizializzazione
+
+		for(Node<V> u : g.getNodes()) {
+			HeapEntry<Node<V>> hu = pqueue.insert(u == source ? 0 : INFINITY, u);
+			dist.put(u, hu);
+		}
+
+		// Ciclo principale
+
+		while (!pqueue.isEmpty()) {
+			HeapEntry<Node<V>> hu = pqueue.removeMin();
+			Node<V> u = hu.getValue();
+
+			for(Edge<V> e : g.getOutEdges(u)) {
+
+				Node<V> v = e.getTarget();
+				if (dist.get(u).getKey() + e.getWeight() < dist.get(v).getKey()) {
+					pqueue.replaceKey(dist.get(v), dist.get(u).getKey() + e.getWeight());
+				}
+
+			}
+
+		}
+
+		for(Node<V> u : g.getNodes()) {
+			System.out.println(u + " " + dist.get(u).getKey());
+		}
+
+        
+    }
 	
 	public static <V> void mst(Graph<V> G) {
 		
@@ -25,33 +63,25 @@ public class GraphServices {
 
     private static <V> void bfsFromNode(Node<V> node, Graph<V> g) {
 
+        ArrayDeque<Node<V>> Q = new ArrayDeque<>();
         
-        LinkedList<Node<V>> queue = new LinkedList<>();
+        node.stato = Node.Stato.EXPLORED;
+        Q.add(node);
         
-        //Inserisci il primo nodo da cui far partire la bfs nella coda
-        queue.addFirst(node);
-        
-        while (! queue.isEmpty()) {
-            
-            //Analizza il nodo in testa alla coda
-            Node<V> Qnode = queue.removeFirst(); 
-            
-            Qnode.stato = Node.Stato.EXPLORED;
-            
-            System.out.println(Qnode.getElement().toString()); // stampa
-            
-            // Prendi tutti i nodi collegati a qnode e se inesplorati inseriscili a in coda alla coda
-            for (Edge<V> outEdge : g.getOutEdges(Qnode)) {
-                
-                Node<V> v = outEdge.getTarget();
-                if(v.stato != Node.Stato.EXPLORED){
-                    
-                    queue.addLast(v);
-                    
+        while(! Q.isEmpty()){
+                Node<V> u = Q.remove();
+                System.out.println(u.getElement());
+                for (Edge<V> e : g.getOutEdges(u)) {
+                    Node<V> v = e.getTarget();
+                    if(v.stato == Node.Stato.UNEXPLORED){
+                        v.stato = Node.Stato.EXPLORED;
+                        Q.add(v);
+                    }
                 }
-            }
             
+           
         }
+        
         
     }
 }
