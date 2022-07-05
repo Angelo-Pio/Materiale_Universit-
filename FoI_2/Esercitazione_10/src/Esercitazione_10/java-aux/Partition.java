@@ -11,6 +11,7 @@ public class Partition<V> {
 		int i = 0;
 		for(Node<V> n : S) {
 			A.put(i, new ArrayList<Node<V>>());
+			n.map = i;
 			A.get(i).add(n);
 			i++;
 		}

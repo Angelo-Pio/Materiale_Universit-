@@ -58,7 +58,37 @@ public class GraphServices {
     }
 	
 	public static <V> void mst(Graph<V> G) {
-		
+
+		Partition<V> part = new Partition<>(G.getNodes());
+		MinHeap<Edge<V>> Q = new MinHeap<>();
+
+		for (Edge<V> e : G.getEdges()) {
+			Q.insert(e.getWeight(), e);
+		}
+		LinkedList<Edge<V>> T = new LinkedList<>();
+
+		while (!Q.isEmpty() ) {
+			HeapEntry<Edge<V>> entry = Q.removeMin();
+			Edge<V> e = entry.getValue();
+
+			Node<V> s = e.getSource();
+			Node<V> t = e.getTarget();
+			
+			List<Node<V>> C_s = part.find(s.map);
+			List<Node<V>> C_t = part.find(t.map);
+
+			if(!C_s.equals(C_t)){
+				part.union(s.map,t.map);
+				T.add(e);
+			}
+
+		}
+
+		for (Edge e : T) {
+			System.out.println(e.getSource().getElement() + " " + e.getTarget().getElement());
+		}
+
+	
 	}
 
     private static <V> void bfsFromNode(Node<V> node, Graph<V> g) {
