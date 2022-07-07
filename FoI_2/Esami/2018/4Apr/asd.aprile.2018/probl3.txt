@@ -1,2 +1,100 @@
 b) 
+Definiamo una struttura dati Partizione per la modellazione di insiemi disgiunti.
+
+ADT : Partition
+
+Questa struttura dati contiene un insieme di liste non ordinate ognuna delle quali ha
+un elemento 'leader' che la caratterizza e a cui ogni elemento della lista ha un riferimento
+ogni lista è un insieme che ha particolari proprietà e che definiamo come 'cluster'.
+
+A livello implementativo si può usare una mappa, dove ogni coppia (key,value) modella
+una coppia (Leader,Cluster) per rappresentare la struttura Partizione, il Leader può essere
+un oggetto o un tipo di dato primitivo che funge da chiave nella mappa
+
+Per le tre primitive (find,union,makeCluster)abbiamo:
+
+ADT Partition{
+
+    //setLeader, getCluster operano in tempo O(1)
+
+    makeset(e) // O(1)
+    {
+        Inizializza un nuovo cluster contente e  C={e} 
+        restituisce C
+    }
+
+    find(e) // O(1)
+    {
+        A <- leader di e e.getLeader() 
+        usa A per individuare il Cluster C di 'e' e restituiscilo
+    }
+    union(A,B) // O(min{deg_A,deg_B})
+    {   
+        if(A.size() > B.size() ){
+            C <- A.getCluster // si prende il cluster associato ad A
+
+            for all elements 'e' in cluster of B
+                e.setLeader(A) // impostiamo il nuovo leader di riferimento da B ad a
+                C.add(e) // aggiungiamo e al cluster di A 
+        }else{
+            C <- Partition.map.getCLuster(B)
+            for all elements 'e' in cluster of A
+                e.setLeader(B)
+                C.add(e)
+        }
+
+    }
+
+}
+
+a)
+
+Per modellare una struttura dati che ci permetta di eseguire unione ed intersezione di due
+insiemi possiamo realizzare una struttura dati che ha un insieme L di liste non ordinate, ognuna delle quali
+rappresenta un insieme I e a cui sia veloce e semplice risalire mediante una chiave k associata ad ogni I.
+
+ADT InsiemeUI
+
+Le primitive:
+
+union(A,B){ O(n+m) dove con n ed m indichiamo la dimensione di A e B rispettivamente
+    C <- crea un nuovo insieme vuoto
+    for all elements j in B
+        remove j from B and add j to C 
+
+    for all elements i in A
+        remove i from A and add i to C
+    ritorna C
+}
+
+intersection(A,B) O(n*m) 
+{   
+    C <- crea un nuovo insieme vuoto
+    for all elements j in B
+        for all elements i in A
+            if i == j
+                rimuovi i da A e j da B 
+                aggiungi i to C
+    ritorna C
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

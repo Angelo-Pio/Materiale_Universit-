@@ -184,11 +184,13 @@ public class BST {
             if(diff > 1){
                 return 0;
             }
+
+            // viene sommato solo 0 mai 1
         
         int l = isBalanced_aux(node.getLeft());
         int r = isBalanced_aux(node.getRight());
 
-        return l == 0 || r == 0 ? 1 : 0;
+        return l == 0 || r == 0 ? 0 : 1;
     }
     public boolean estFoglia(BinNode node){
         return node.getLeft() == null && node.getRight() == null;
