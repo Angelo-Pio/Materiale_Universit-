@@ -1,0 +1,26 @@
+a) Il costo asintotico dell'algoritmo è: O(n!)
+
+Argomentazione:
+
+L'algoritmo riportato è un algoritmo ricorsivo in cui ad ogni iterazione vengono eseguite un numero di 
+chiamate ricorsive proporzionale alla lunghezza della stringa s in input, una chiamata termina quando
+la lunghezza della stringa s è pari a 0.
+
+Utilizziamo il metodo dello strotolamento e utilizziamo una costante c abbastanza grande per
+inglobare i costi unitari di tutte le operazioni elementari più le invocazioni del metodo substring il cui
+costo ipotizziamo costante.
+
+Ipotizzando di invocare inizialmente process su una stringa di lunghezza n > 0, nella prima chiamata
+essendo n > 0 verrà creato un ciclo for che eseguirà un numero di chiamte a process proporzionale alla
+lunghezza di s, quando process viene chiamato nel ciclo gli viene passato come secondo argomento una nuova
+stringa di dimensione n - 1.
+
+Analizzando tramite lo strotolamento:
+
+T(n) = c + n(T(n-1)) <= c +c*n + n*(n-1)*(T(n-2)) <= ... <= n*(n-1)*...*(n-i)*(T(n-i)) + 
++ (somma da i=0 a n di c(n-i))
+
+L'algoritmo termina quando i = n da cui il costo asintotico è O(n!)
+
+b) Il costo asintotico del caso a non varia a livello macroscopico ma ci sarà certamente un aumento del
+valore della costante c
