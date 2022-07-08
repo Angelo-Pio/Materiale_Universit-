@@ -1,0 +1,166 @@
+a)
+
+L'algoritmo di seguito riportato sfrutta l'algoritmo di Dijkstra per calcolare le distanze
+minime da s di tutti i nodi del grafo, somma tutte queste quantità nella variabile dist_sum ed infine 
+calcola e ritorna la quantità d(s).
+Poichè le operazioni ' dist_sum += D[u] ' e ' dist_sum/(|V| - 1)' hanno costo costante O(1) e trascurabile
+l'algoritmo avrà costo pari all'algoritmo di Dijkstra, ovvero O((n+m)*log(n)).
+
+Ipotizziamo di implementare G tramite liste di adiacenza.
+
+Il primo ciclo for scansiona tutti i vertici di G, per cui se n = |V| e m = |E| abbiamo che il suo 
+costo è O(n), viene poi Inizializzata la coda di priorità Q, il costo di questo step ha costo O(nlog(n)) ipotizzando di usare una implementazione
+tramite Heap.
+Il ciclo while eseguirà un numero di iterazioni proporzionale alla dimensione di Q, che sappiamo essere n; questo
+perchè ad ogni iterazione viene rimosso un vertice da Q che diventerà vuota dopo esattamente n rimozioni.
+Ogni rimozione da Q costa O(log(n)), vengono effettuate n rimozioni per cui abbiamo un costo complessivo di O(n*log(n)).
+Infine vengono analizzati gli archi di cui u è orgine, e nel caso peggiore sarà necessario modificare m volte
+il valore D[v] all'interno di Q, per fare ciò ipotizziamo di avere a disposizione un metodo che ci permetta di fare ciò 
+in tempo O(log(n)) (questo costo può essere ottenuto implementando Q come una coda di priorità adattabile) , da cui 
+avremo un tempo complessivo di O(m*log(n)).
+
+
+Unendo questi dati abbiamo che il ciclo while ha costo O((n+m)*log(n)) ovvero un upper bound per l'algoritmo
+
+
+AlgoritmoA(Grafo G=(V,E), Vertice s){
+
+    // Inizializza le etichette dei vertici di G 
+    for all v in V and v != s
+        D[v] <-infinity
+    D[s] <- 0  
+
+    Q <- Crea una coda di priorità Q ed Inizializzala con tutti i vertici di G incluso s
+    dist_sum <- Inizializza una variabile per immagazzinare la somma di tutte le di distanze d(s,v)
+
+
+
+    while(Q is not empty){
+        u <- estrai da Q l'elemento minimo // Q.removeMin()
+        dist_sum += D[u] 
+        for all e = (u,v) in E // analizza tutti gli archi che hanno come orgine u 
+
+            if(D[u] + weight(e) < D[v]) // rilassamento
+                D[v] = D[u] + weight(e)
+                aggiorna il valore di v in Q
+            
+    }
+    
+    return  dist_sum/(|V| - 1)
+
+
+}
+
+b)
+
+L'algoritmo sotto riportato sfrutta l'algoritmo dell'esercizio a) per calcolare  d(s) ed una sua variante: AlgoritmoB_aux per
+calcolare d(s) ignorando ad ogni iterazione un nuovo arco, se il risultato dell'algoritmo riporta un valore
+d(s)' maggiore di quello di partenza aggiunge l'arco ad un lista di archi che verrà restituita alla fine.
+
+COSTO ALGORTIMO: 
+
+    viene chiamato AlgoritmoA una prima volta, questo ha costo O((n+m)*log(n)), successivamente viene chiamato m volte AlgoritmoB_aux
+    il quale ha lo stesso costo dell' AlgoritmoA, ciò porta a far sì che il costo asintotico dell' AlgoritmoB sia 
+    O(m*((n+m)*log(n))
+
+
+AlgoritmoB(Grafo G=(V,E), Vertice s){
+
+    d <- AlgoritmoA(G,s)    calcola d(s) 
+    res <- Inizializza una lista di archi  res vuota
+
+    for all e in E 
+        
+        Etichetta e come 'Signed' 
+        d_temp <- AlgoritmoB_aux(G,s,e)  calcola d(s) escludendo l' arco e dalle operazioni
+        
+        if d_temp > d 
+            res.add(e)
+
+        
+    return res
+
+}
+
+
+AlgoritmoB_aux(G,s,edge){
+    // Inizializza le etichette dei vertici di G 
+        for all v in V and v != s
+            D[v] <-infinity
+        D[s] <- 0  
+
+        Q <- Crea una coda di priorità Q ed Inizializzala con tutti i vertici di G incluso s
+        dist_sum <- Inizializza una variabile per immagazzinare la somma di tutte le di distanze d(s,v)
+
+
+
+        while(Q is not empty){
+            u <- estrai da Q l'elemento minimo // Q.removeMin()
+            dist_sum += D[u] 
+            for all e = (u,v) in E and e != edge // analizza tutti gli archi che hanno come orgine u 
+
+                if(D[u] + weight(e) < D[v]) // rilassamento
+                    D[v] = D[u] + weight(e)
+                    aggiorna il valore di v in Q
+                
+        }
+        
+        return  dist_sum/(|V| - 1)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
