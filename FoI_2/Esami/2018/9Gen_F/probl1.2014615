@@ -1,0 +1,33 @@
+Costo temporale asintotico: O(n^2)
+
+
+b) Il metodo ordina non è nient'altro che una versione alternativa dell'algoritmo di ordinamento
+bubble sort, un algoritmo di ordinamento con costo temporale asintotico O(n^2) in cui per ogni posizione
+i dell'array A viene eseguito il test A[i] > A[i+1], in caso affermativo i due elementi vengono scambiati ed il
+processo iterato finchè i+1 = n ovvero fino al raggiungimento della fine dell'array A.
+
+(Per semplicità ci riferiamo ad ordina(int a[]) con ordina1 e ad ordina(int a[]m int i) con ordina2 )
+
+Per illustrare il funzionamento di questo algoritmo bisogna analizzare come vengono eseguite le chiamate ricorsive 
+ai metodi infila ed ordina2, e di come l'ordine in cui queste chiamate vengono realizzate ci porta a dire che ordina 
+ha costo asintotico O(n^2) ed esegue un algoritmo di bubble sorting partendo dal penultimo elemento dell'array.
+
+Ipotizziamo di invocare ordina1 dando in input un array A di dimensione n > 0.
+
+Ordina1 chiama Ordina2 passando come argomenti in input a = A e i = 0.
+Ordina2 è un metodo ricorsivo, se i sommato 1 è pari alla dimensione di A termina e ritorna A, altrimenti
+chiama infila(i,ordina(a,i+1)). Questo sistema porta a far sì che infila potrà iniziare la sua esecuzione solo quando 
+il caso base di ordina2 verrà soddisfatto, ovvero solo quando si giungerà all' (n-1)-esima invocazione di ordina2 che avrà
+nel frattempo invocato infila altrettante n-1 volte e dove i = n-1 .
+Nella sua prima esecuzione allora infila avrà come parametri in input a = A ed i = n-1, a questo punto infila si comporta come
+un normale algoritmo di bubble sort come sopra descritto.
+
+Successivamente infila verrà chiamato, a seguito del progressivo svuotamento della stack dei record di attivazione, 
+con valori di i sempre minori, fino ad arrivare a 0, notiamo che infila esegue ad ogni invocazione una scansione di A
+da i fino a n-1 per cui A viene ordinato a partire da A[i] per i = n-1 , poi i = n-2 ... i = n-k per k da 1 a n-1   
+
+a) O(n^2)
+
+
+
+

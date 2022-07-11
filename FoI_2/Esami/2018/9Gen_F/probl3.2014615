@@ -1,0 +1,21 @@
+Definiamo la struttura dati 'MediaBST' questa struttura dati consta di :
+
+3 variabili di istanza:
+
+    int sum : Somma dei valori presenti nella struttura
+    int size : Il numero di elementi presenti nella struttura
+    int dim : Dimensione dell'array
+    int[] arr : array di interi di dimensione dim
+
+4 metodi:
+
+    int media() O(1): ritorna la quantità sum / size
+
+    int find(int k) O(1): se k > size ritorna -1 altrimenti ritorna il valore di A[k]   
+
+    void insert(int e) O(n + log n) : se size + 1 == dim - 1 raddoppia la dimensione dell'array tramite 
+    la tecnica del raddoppio, aggiorna dim ed inserisce e in arr[size], incremetando size e sommando
+    e a sum. Infine ordina l'array tramite insertion sort partendo dall'indice i = size
+
+    void remove(int k) O(n): se k > size termina altrimenti sottrae arr[k] da sum ed esegue arr[k] = null e sposta tutti gli elementi in
+    posizioni successive a k di una posizione indietro,

@@ -1,0 +1,60 @@
+a)
+
+La domanda che mi chiedo è:
+
+dato il grafo G posso trovare due sottografi disgiunti i in cui ogni arco ha un 
+estremo in V1 e l'altro in V2 ???
+
+bipartito(G g){
+
+    Set V1 , V2 
+
+    for all edges e = (u,v) in g.getEdges(){
+
+        u <- e.getSource
+        v <- e.getTarget
+
+        if(u is EXPLORED && v is EXPLORED){
+            if( both u and are in V1 or both are in V2  )
+                return false
+            
+        }
+        if( u is EXPLORED && v is UNEXPLORED)
+            if( V1.contains(u))
+                V2.add(v)
+            else
+                V1.add(v)
+            v <- EXPLORED
+
+        if(u is UNEXPLORED && v is EXPLORED)
+            if( V1.contains(v))
+                V2.add(u)
+            else
+                V1.add(u)
+
+            u <- EXPLORED
+    }
+
+    return true;
+
+
+}
+
+
+
+b)
+
+Analizza tutti i nodi di K, se v sta in K controlla che 
+
+completo(G g, G K){
+
+    Set K_Vertices <- create a Set of all K's vertices
+
+    for all vertices u in V
+        if K_Vertices  contains u
+            for all edges e=(u,v) g.getEdges(u)
+                if(K_Vertices not contains v)
+                    return false
+
+
+}
