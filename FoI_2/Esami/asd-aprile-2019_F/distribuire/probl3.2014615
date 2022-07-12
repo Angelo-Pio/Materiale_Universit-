@@ -1,0 +1,39 @@
+a)
+
+    alg1(int[] arr){
+
+        p <- get index parent of last element in arr
+
+        while i > 0 
+            downheap(i) <- use downheap bubbling to order and merge sub-trees, the downheap will follow the 
+                            total order property: if root is radix of the tree and c is a child of root, c's value will
+                            always be lower than root's value 
+            i--
+
+    }
+
+b)
+    alg2(BST t){
+        
+        l_heigth <- calculte t's left subtree's heigth
+        r_heigth <- calculte t's right subtree's heigth
+
+        answ <- get the greater between l_heigth and r_heigth and subtract from it the value of the other
+        if( answ > 1 ) return, the tree is not balanced
+
+        else
+            recursively call alg2 on t's left and right subtrees
+
+            call alg2(t.left)
+            call alg2(t.right)
+
+        return t is balanced
+          
+    }
+
+
+c)
+
+    pre-order: D-H-E-O-C-F-P-I-M-J-B-G-N-A-L-K
+    in-order:   E F C P I O H D J G N B M A K L
+    post-order: E F I P C O H N G B J K L A M D 

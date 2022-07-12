@@ -1,0 +1,23 @@
+1)
+
+Generare un hashcode solido che minimizzi il numero di collisioni all'interno della struttura
+non è un' impresa semplice. La bontà di un hashcode è data dalla minimizzazione delle possibili collisioni,
+una collisione viene generata quando due elementi appartenti ad un hashmap vengono mappati nello stesso indice.
+Se si sceglie di generare un hashcode sommando i codici ASCII dei primi 4 caratteri di una stringa s questo porterà ad un numero di collisioni 
+davvero grande e si può dimostrare che la somma dei codici ASCII non è una buona scelta per generare hashcode in generale, indipendentemente dal
+numero di caratteri considerati.
+
+Prendiamo ad esempio la stringa "maria" e sommiamo i codici ASCII dei primi 4 caratteri  otteniamo :
+
+a: 97
+m: 109
+r: 114
+i: 105
+
+La somma ci da hashcode("maria")= 425 
+
+Se ora consideriamo la stringa "rima" e adoperiamo lo stesso procedimento otterremo che
+hashcode("rima") = 425. Lo stesso vale per "mira" ecc.
+
+Questo risultato rende evidente che di fronte ad anagrammi o in generale, parole che hanno le stesse 4 lettere iniziali 
+disposte in un qualunche ordine si avranno continue collisioni.

@@ -1,0 +1,13 @@
+b) 
+
+L'algoritmo descritto dal metodo s è un algoritmo di ordinamento chiamato insertion sort, s però
+data la sua natura ricorsiva non fa iniziare la procedura di ordinamento dal primo elemento dell' array in input
+bensì dal penutimo. 
+Il metodo che effettivamente esegue l'algortimo di sorting è p la cui prima invocazione si avrà solo quando saranno
+terminate le chiamate ricorsive ad s(int[] a,int i) situate come secondo parametro del metodo di p in ad
+
+a) Il costo asintotico dell' algoritmo è O(z^2)
+
+Valutiamo l'equazione di ricorrenza di s:
+
+T(z) = z + T(z-1) = z + (z  + T(z-2)) = ... = z(z-1)/2 -> O(z^2)  

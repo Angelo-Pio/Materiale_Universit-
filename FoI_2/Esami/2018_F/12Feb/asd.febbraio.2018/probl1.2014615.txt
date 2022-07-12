@@ -1,0 +1,34 @@
+Il costo asintotico nella dimensione dell'input è O(n).
+
+SPIEGAZIONE:    
+
+L'algoritmo riportato fa uso della ricorsione doppia, per cui ad ogni invocazione abbiamo 
+due chiamte ricorsive del metodo in esame.
+Se costruiamo l'albero delle chiamate ricorsive noteremo che in realtà verranno effettuate un numero di chiamate
+ricorsive totali proporzionali alla dimensione dell'array input:
+
+Ipotizzando di chiamare g(int[] a) dando in input un array A di dimensione n > 0
+e notiamo come venga effettuata una divisione intera per 4 nella determinazione di onefourth
+
+Facciamo un esempio banale se A fosse un array di 4 elementi l'albero delle chiamate ricorsive avrebbe questa forma:
+
+Rappresentiamo tra parentesi quadre il valore di onefourth ad ogni chiamata ricorsiva
+
+                        (int i, int j)
+
+                            (0,3) -> onefourth = (3+1-0)/4 = [1]
+
+            (0,1) [1/2 ~ 0]       (2,3) [1/2 ~ 0]
+
+        (0,0) (1,1)                 (2,2) (3,3)
+
+
+Questo ci da uno spunto su come calcolare il costo asintotico dell'algoritmo in esame
+
+Avremo infatti che per un array A in input di dimensione n > 0, l'i-esimo livello dell'albero
+delle chiamate ricorsive sarà:
+
+
+
+b) L'algoritmo non muterebbe significatamente nel suo costo asintotico in quanto la divisione intera restituisce sempre indici 
+    sufficientemente piccoli

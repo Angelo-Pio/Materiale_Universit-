@@ -1,7 +1,6 @@
-Cognome: 
-Nome: 
-Matricola: 
-Email Sapienza: 
-Esame ([V]ecchio/[N]uovo): 
-Linguaggio ([C]/[J]ava):
-Laureando prossima sessione o test VCA entro fine Luglio (rispondere sì unicamente in questi casi):
+Cognome: Pompeo
+Nome: Angelo Pio
+Matricola: 2014615
+Email Sapienza: pompeo.2014615
+Esame ([V]ecchio/[N]uovo): N
+Linguaggio ([C]/[J]ava): J
