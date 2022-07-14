@@ -1,0 +1,35 @@
+1)
+
+EFFICIENZA ---> COSTO ASINTOTICO MINORE, NON SI TIENE CONTO DEL DISPENDIO DI MEMORIA
+
+alg(UnorderedList list){
+
+    Q <- Initialize empty MaxHeap
+    res <- Initialize empty list of the same size as list
+    for all l=(key,value) in list
+         
+        Q.insert(l) <- insert l in Q, every insert will maintain Heap Order property
+                        through up-heap bubbling
+    while(!Q.isEmpty())
+        res.add(Q.removeMax())
+
+    return res
+
+}
+
+Per ordinare una lista non ordinata di coppie (key,value) ci appoggiamo su una struttura dati
+MaxHeap, che ci permette di realizzare un algoritmo di heap sort.
+Nella struttura MaxHeap facciamo uso di un array di Entry in cui ogni entry rappresenta una coppia della lista in input
+ordinata secondo una relazione di ordine totale che fa riferimento al campo key di ogni coppia.
+La relazione di ordine totale che definiamo ci dice che per ogni nodo dell' albero dell' Heap
+il valore della chiave del nodo p sarà sempre minore o uguale a quello del valore della chiave del padre di p
+
+
+Abbiamo poi i due metodi insert e removeMax, fondamentali per l'implementazione dell'algoritmo di 
+heap sort; entrambi hanno infatti costo O(log n) e sfruttano tecniche di up-heap-bubbling e down-heap-bubbling.
+
+Insert((key,value)) O(log(n)) {
+
+...
+
+} 
