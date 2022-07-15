@@ -1,0 +1,63 @@
+1) 
+
+Il grafo usato per rappresentare il problema è un cosidetto: DAG acronimo di
+Directed Acyclic Graph ovvero grafo aciclico  diretto.
+
+Un DAG è un grafo diretto con archi pesati privo di cicli diretti indi per cui:
+
+i) è diretto
+ii) è pesato
+ii) non può avere cicli diretti
+
+Per rappresentare il problema proposto il DAG che useremo avrà i vertici che modellano attività
+mentre i vincoi di precedenza fra queste attività verrano modellati dagli archi che le connettono e dai i loro pesi.
+L'asssenza di cicli diretti è fondamentale poichè la caratteristica principale del nostro grafo è quella di
+far sì che, ad esempio, si acceda all' attività B solo dopo aver svolto l'attività A  e quindi ci sia in generale
+un ordine totale sulla visita dei nodi. 
+Per dimostrare che la presenza di un ciclo diretto porterrebbe ad una violazione di questa caratteristica ipotizziamo
+di avere un grafo G come sopra descritto e che tutti i nodi v del grafo siano ordinati in maniera tale che per ogni arco e=(vi,vi+1)
+abbiamo :
+
+    (vi0,vi1) ... (vik-1,vik) con i0 < ... ik
+
+ippotizziamo che il grafo G abbia un ciclo diretto, allora avremmo:
+
+    (vi0,vi1) ... (vik-1,vik) (vik,vi0) con i0 < ... < ik
+
+la presenza dell'arco (vik,vi0) crea un ciclo diretto tra vik e vi0 , ma questo porterebbe all'assurdo per cui 
+
+i0< ...< ik < i0 ovvero che io sia minore di sè stesso il che è un assurdo
+
+Questo giustifica l'assenza di cicli diretti in un DAG
+
+2)
+
+    algorithm(G g){
+
+        u <- initialize first vertex without incoming edges
+
+        for all vertices v in g.getVertices()
+            if v.inEdges is empty
+                u <- v 
+
+        L <- initialize empty list, this list will store a set of vertices ordered
+        Ready <- initialize empty queue to store vertices to analize
+
+        Ready.addLast(u) <- Insert u at the end of List
+
+        while(!Ready.isEmpty())
+
+            u <- Ready.removeFirst()
+            L.addLast(u) 
+
+            for all edge e=(u,v) in g.getOutEdges(g)
+                
+                v <- opposite(e,u)
+                v.numIEdges -= 1
+                if(v.numIEdges == 0) 
+                    Ready.addLast(v)
+
+        }
+
+        return L;
+    }

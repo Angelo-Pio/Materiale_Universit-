@@ -1,0 +1,24 @@
+1)
+
+    Per realizzare n inserimenti così descritti bisogna sfruttare un algortimo di ordinamento
+    come l'insertion sort, per cui ad ogni nuovo inserimento il nuovo elemento viene inserito nella prima 
+    posizione disponibile e a partire da questa si esegue insertion sort dalla posizione in cui il nuovo elemento
+    è stato inserito fino alla testa dell'array.
+    Il caso peggiore possibile in questa situazione sono n inserimenti continui in ordine decrescente da cui 
+    per cui si ha costo O(n^2)
+
+
+2)
+
+Il costo asintotico del caso peggiore di n inserimenti in ordine decrescente in un heap minimale 
+è O(n log(n)) questo è dato dal fatto che per ogni inserimento bisogna ristabilire la proprietàù
+di Heap-Order della struttura e per farlo si utilizza un metodo di up heap bubbling il cui costo
+asintotico è O(log n ), ripetere allora questa operazione n volta ci porta ad avere un costo complessivo
+di O(n log n)
+
+
+3)
+
+pre-ordine: 6 3 1 5 12 7 8 15
+post-ordine : 1 5 3 8 7 15 12 6
+simmetrica: 1 3 5 6 7 8 12 15

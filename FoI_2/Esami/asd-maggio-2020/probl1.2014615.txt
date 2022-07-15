@@ -1,0 +1,11 @@
+1)
+
+O(n)
+
+T(n) = c + T(n-1) = c +(c + T(n-2)) = 2c + T(n-2) = ... = ic + T(n-i) 
+
+termina per i = n -> nc + T(0) -> O(n)
+
+2)
+
+O(n)
