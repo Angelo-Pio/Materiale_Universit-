@@ -2,79 +2,73 @@ import java.util.*;
 
 public class GraphServices {
 
-	/**
-	 *
-	 */
-	private static final int SOURCE_VALUE = 0;
-	private static final int MAX_VALUE = 10000;
-	private static int rel;
+	public final static int MAX_VALUE = 10000;
 
 	public static <V> void bfs(Graph<V> g, Node<V> source) {
-		LinkedList<Node<V>> Q = new LinkedList<>();
-		source.stato = Node.Stato.EXPLORED;
+
 		source.timestamp = 0;
-		Q.addLast(source);
-		while (!Q.isEmpty()) {
-			Node<V> u = Q.removeFirst();
+		source.stato = Node.Stato.EXPLORED;
+
+		LinkedList<Node<V>> queue = new LinkedList<>();
+		queue.addLast(source);
+
+		while (!queue.isEmpty()) {
+			Node<V> u = queue.removeFirst();
 			System.out.println("Livello " + u.getElement() + ": " + u.timestamp);
 			for (Edge<V> e : g.getOutEdges(u)) {
 				Node<V> v = e.getTarget();
-				if (v.stato == Node.Stato.UNEXPLORED) {
-					v.stato = Node.Stato.EXPLORED;
+				if(v.stato == Node.Stato.UNEXPLORED){
+					
 					v.timestamp = u.timestamp + 1;
-					Q.addLast(v);
+					v.stato = Node.Stato.EXPLORED;
+					queue.addLast(v);
 				}
 			}
 		}
+
+
 	}
 
 	public static <V> String sssp(Graph<V> g, Node<V> source) {
-		String r = "Distanze dal nodo " + source.getElement() + " [";
-		StringBuilder res = new StringBuilder(r);
 
-		HashMap<Node<V>, HeapEntry<Node<V>>> cloud = new HashMap<>();
+		String res = "Distanze dal nodo " + source.getElement() + " [" ;
+
 		MinHeap<Node<V>> Q = new MinHeap<>();
+		HashMap< Node<V> , HeapEntry<Node<V>> > cloud = new HashMap<>();
 
-		for (Node<V> n : g.getNodes()) {
-
-			if (n.equals(source)) {
-				n.timestamp = SOURCE_VALUE;
-				cloud.put(n, Q.insert(SOURCE_VALUE, n));
-			} else {
-
-				n.timestamp = MAX_VALUE;
-				cloud.put(n, Q.insert(MAX_VALUE, n));
+		// Inizialize MinHeap and cloud
+		for (Node<V> node : g.getNodes()) {
+			if(node.equals(source)){
+				node.stato = Node.Stato.UNEXPLORED;
+				cloud.put(node, Q.insert(MAX_VALUE, node));
+			}else{
+				node.stato = Node.Stato.EXPLORED;
+				cloud.put(node, Q.insert(0, node));
 			}
 		}
-
+		
 		while (!Q.isEmpty()) {
-			HeapEntry<Node<V>> entry = Q.removeMin();
+			HeapEntry<Node<V>> entry = Q.getMin();
 			Node<V> u = entry.getValue();
-
-			res.append(u.getElement() + ":" + u.timestamp + ", ");
-
 			for (Edge<V> e : g.getOutEdges(u)) {
-
 				Node<V> v = e.getTarget();
+				if(v.stato = Node.Stato.UNEXPLORED){
 
-				int rel = u.timestamp + e.getWeight();
-				if (rel < v.timestamp) {
-
-					v.timestamp = rel;
-					v.stato = Node.Stato.EXPLORING;
-					Q.replaceKey(cloud.get(v), rel);
+					Q.replaceKey(cloud.get(v), newK)
 				}
-
 			}
 		}
-		res.replace(res.length()-2, res.length(), "]");
-		return res.toString();
+		
+		
+		source.stato = Node.Stato.EXPLORED;
+
+
+
+
+		return res + "]";
 	}
 
 	public static <V> void apsp(Graph<V> g) {
-
-		for (Node<V> n : g.getNodes()) {
-			System.out.println(sssp(g, n));
-		}
+		// DA IMPLEMENTARE
 	}
 }

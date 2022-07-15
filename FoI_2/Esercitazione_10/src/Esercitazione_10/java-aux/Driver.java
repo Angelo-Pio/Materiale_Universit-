@@ -70,5 +70,54 @@ public class Driver {
 		// Test per MST
 		System.out.println("MST:");
 		GraphServices.mst(gra);
+
+		Graph<String> g = createGraph(a, b, c, d, e, f);
+		
+		System.out.println("MST Kruskal:");
+		GraphServices.mst(g);
+		
+		
+		
+		g = createGraph(a, b, c, d, e, f);
+
+		System.out.println("MST Prim Jarnik:");
+		GraphServices.mst(g);
+	}
+
+	private static Graph<String> createGraph(Node<String> a, Node<String> b, Node<String> c, Node<String> d,
+			Node<String> e, Node<String> f) {
+		// Test Esame
+
+		Graph<String> g = new Graph<String>();
+	
+		
+		g.insertNode(a); 		
+		g.insertNode(b); 		
+		g.insertNode(c); 		
+		g.insertNode(d); 		
+		g.insertNode(e); 		
+		g.insertNode(f); 
+
+		g.insertEdge(b, a, 20);
+		g.insertEdge(b, c, 15);
+		g.insertEdge(b, d, 3);
+		g.insertEdge(a, b, 20);
+		g.insertEdge(a, c, 9);
+		g.insertEdge(a, d, 5);
+		g.insertEdge(c, d, 7);
+		g.insertEdge(c, a, 9);
+		g.insertEdge(c, e, 12);
+		g.insertEdge(c, b, 15);
+		g.insertEdge(d, b, 3);
+		g.insertEdge(d, a, 5);
+		g.insertEdge(d, c, 7);
+		g.insertEdge(d, e, 6);
+		g.insertEdge(d, f, 10);
+		g.insertEdge(e, f, 8);
+		g.insertEdge(e, d, 6);
+		g.insertEdge(e, c, 12);
+		g.insertEdge(f, e, 8);
+		g.insertEdge(f, d, 10);
+		return g;
 	}
 }

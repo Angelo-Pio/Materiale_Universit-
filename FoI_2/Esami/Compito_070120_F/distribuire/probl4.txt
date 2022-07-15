@@ -1,0 +1,28 @@
+1) Il grafo mostrato presente in figura presenta tutti archi con pesi distinti,
+per questo motivo il mst per il grafo sarà unico in quanto non vi saranno situazioni 
+di ambiguità in cui due o più archi di peso uguale, il loro apporto al peso totale del grafo
+sarà indiferrente ma la struttura dello mst sarà invece diversa
+
+2) 
+
+ITERAZIONE              ARCO DA AGGIUNGERE A T              ARCHI CONSIDERATI
+
+    0                           (B,-)                           (B, -)
+    1                           -                               (B,A) 
+    2                           -                               (B,D)
+    3                           -                               (B,C)
+    4                           (D,B)                           (D,B)
+    5                           -                               (D,A)
+    6                           -                               (D,C)
+    7                           -                               (D,F)
+    8                           -                               (D,E)
+    9                           (A,D)                           (A,D)
+    10                          -                               (A,C)
+    11                          -                               (A,B)
+    12                          (E,D)                           (E,D)
+    13                          -                               (E,C)
+    14                          -                               (E,F)
+    15                          (C,D)                           (C,D)
+    16                          -                               (C,A)
+    16                          -                               (C,E)
+    17                          (F,E)                           (F,E)

@@ -4,9 +4,11 @@ public	class Node<V> {
 		UNEXPLORED, EXPLORING, EXPLORED;
 	};
 	
+
 	private V element;
 	public Stato stato;
-	
+	private Edge<V> edge = null ;
+
 	int map; // Usato da partition union e find
 	
 	public Node(V e) {
@@ -15,7 +17,13 @@ public	class Node<V> {
 	}
 
 	public V getElement() { return element; } 
+	public Edge<V> getConnectEdge() {
+		return edge;
+	}
 
+	public void setConnectEdge(Edge<V> edge) {
+		this.edge = edge;
+	}
 	public String toString() {
 		return element.toString();
 	}

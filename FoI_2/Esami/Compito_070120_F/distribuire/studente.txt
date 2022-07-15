@@ -1,7 +1,7 @@
-Cognome: Pompeo
-Nome: Angelo Pio
-Matricola: 2014615
-Email Sapienza: pompeo
+Cognome: 
+Nome: 
+Matricola: 
+Email Sapienza: 
 Esame ([V]ecchio/[N]uovo): 
 Linguaggio ([C]/[J]ava):
 Posizione (se non riesci a trovarla segnala al docente quando fa controllo documenti): 
