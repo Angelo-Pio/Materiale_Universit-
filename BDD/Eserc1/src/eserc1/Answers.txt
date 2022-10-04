@@ -1,0 +1,13 @@
+1 -> \project_{bar}(\select_{birra='Peroni'}(SERVE));  res: Baldoria
+2 -> \project_{bevitore}(\select_{birra='Corona' OR birra='Amstel'}(GRADISCE)); res: Anna, Bruno,Diego,Elena
+3 -> \project_{bevitore}( \select_{birra='Corona'}(GRADISCE)) \intersect \project_{bevitore}(\select_{birra='Amstel'}(GRADISCE)); res: Anna,Diego,Elena
+4 -> (\project_{bar}(\rename_{bar,indirizzo}(BAR)) \diff \project_{bar}(SERVE) ) \diff \project_{bar}(FREQUENTA) ; res: null
+5 -> \project_{birra}(\rename_{birra,fabbrica}(BIRRA)) \diff \project_{birra}(SERVE) ; res: Poretti
+6 -> \project_{bar}(\rename_{bar,indirizzo}(BAR)) \diff  \project_{bar}(\select_{bevitore = 'Anna'}(FREQUENTA)) \intersect \project_{bar}(\select_{birra = 'Moretti'}(SERVE)); res= Baldoria
+7 -> \project_{birra}(\rename_{birra,fabbrica}(\select_{fabbrica = 'Peroni Brewing'}(BIRRA))) \intersect \project_{birra}(\rename_{birra,fabbrica}(BIRRA)) \diff \project_{birra}(GRADISCE) ; res: null
+
+
+
+
+
+
