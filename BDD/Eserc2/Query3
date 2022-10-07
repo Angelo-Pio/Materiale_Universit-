@@ -1,0 +1,5 @@
+select genia.genitore, genia.figlio
+from genia, persona as genitore , persona as figlio
+where genitore.cittanascita = figlio.cittanascita 
+AND genitore.nome = genia.genitore
+AND figlio.nome = genia.figlio

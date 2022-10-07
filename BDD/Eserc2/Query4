@@ -1,0 +1,7 @@
+select distinct genia.genitore as nonno
+from genia, (
+		select distinct persona.nome 
+		from persona, genia
+		where persona.nome = genia.genitore
+	) as padre, persona
+where genia.figlio = padre.nome AND persona.sesso = 'M' AND genia.genitore = persona.nome

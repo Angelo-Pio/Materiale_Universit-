@@ -1,0 +1,3 @@
+select persona.nome, citta.regione
+from persona, citta
+where persona.eta >= 18 AND persona.cittanascita = citta.nome 
