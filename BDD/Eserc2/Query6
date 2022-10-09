@@ -1,50 +1,26 @@
 select  famiglia1.figlio as f1 , famiglia2.figlio as f2
 from
 
-		(select distinct madre, padre , madre.figlio as figlio
-		from
-
-		(select distinct madre.genitore as madre, madre.figlio as figlio
-		from genia as madre ,persona
-		where
-			madre.genitore = persona.nome AND persona.sesso = 'F' ) as madre
-
-		,
-
-		(select distinct padre.genitore as padre, padre.figlio as figlio
-		from genia as padre ,persona
-		where
-			padre.genitore = persona.nome AND persona.sesso = 'M' ) as padre
-
-		where madre.figlio = padre.figlio
+		(select distinct madre.genitore as madre,padre.genitore as padre,madre.figlio as figlio
+			from genia as madre , genia as padre
+			where
+			madre.genitore != padre.genitore
+			AND madre.figlio = padre.figlio
+			AND madre > padre
 		) as famiglia1
 		
 		,
 		
-		(select distinct madre, padre , madre.figlio as figlio
-		from
-
-		(select distinct madre.genitore as madre, madre.figlio as figlio
-		from genia as madre ,persona
-		where
-			madre.genitore = persona.nome AND persona.sesso = 'F' ) as madre
-
-		,
-
-		(select distinct padre.genitore as padre, padre.figlio as figlio
-		from genia as padre ,persona
-		where
-			padre.genitore = persona.nome AND persona.sesso = 'M' ) as padre
-
-		where madre.figlio = padre.figlio
+		(
+			select distinct madre.genitore as madre,padre.genitore as padre,madre.figlio as figlio
+			from genia as madre , genia as padre
+			where
+			madre.genitore != padre.genitore
+			AND madre.figlio = padre.figlio
+			AND madre > padre
 		) as famiglia2
 		
 where famiglia1.figlio != famiglia2.figlio 
 AND famiglia2.figlio >= famiglia1.figlio
 AND famiglia1.madre = famiglia2.madre
 AND famiglia1.padre = famiglia2.padre
-
-
-
-
-
