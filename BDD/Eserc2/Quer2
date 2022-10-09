@@ -1,5 +1,0 @@
-select distinct citta.regione
-from citta,genia,persona
-where genia.genitore = persona.nome 
-AND persona.eta > 50 
-AND persona.cittanascita = citta.nome 

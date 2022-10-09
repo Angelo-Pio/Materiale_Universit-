@@ -1,25 +1,11 @@
-select nonno.nome as nonno, nonna.nome as nonna
-from
-	(select distinct genia.genitore as nome , padre.figlio as nipote
-	from genia, (
-			select distinct persona.nome , genia.figlio
-			from persona, genia
-			where persona.nome = genia.genitore AND persona.sesso = 'M'
-		) as padre, persona
-	where genia.figlio = padre.nome AND persona.sesso = 'M' AND genia.genitore = persona.nome
-	)as nonno
-	,
-
-	(select distinct genia.genitore as nome, padre.figlio as nipote
-	from genia, (
-			select distinct persona.nome , genia.figlio
-			from persona, genia
-			where persona.nome = genia.genitore AND persona.sesso = 'M'
-		) as padre, persona
-	where genia.figlio = padre.nome 
-	 AND persona.sesso = 'F' 
-	 AND genia.genitore = persona.nome) 
-	as nonna
-where nonno.nipote = nonna.nipote
-
-	
+select p1.nome , p2.nome
+from genia as nonno , genia as nonna, genia as padre, persona as p1 , persona as p2 , persona as p3
+where 
+nonno.figlio = padre.genitore 
+and padre.genitore = p3.nome
+AND p1.nome = nonno.genitore
+and nonna.figlio = padre.genitore
+and p2.nome = nonna.genitore
+and p1.sesso = 'M'
+and p3.sesso = 'M'
+and p2.sesso = 'F'
