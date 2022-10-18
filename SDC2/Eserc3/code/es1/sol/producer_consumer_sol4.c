@@ -10,10 +10,10 @@
 #define INITIAL_DEPOSIT     0
 #define MAX_TRANSACTION     1000
 #define NUM_CONSUMERS       10
-#define NUM_PRODUCERS       1
+#define NUM_PRODUCERS       5
 #define PRNG_SEED           0
 
-#define NUM_OPERATIONS      40000
+#define NUM_OPERATIONS      4000000
 #define OPS_PER_CONSUMER    (NUM_OPERATIONS/NUM_CONSUMERS)
 #define OPS_PER_PRODUCER    (NUM_OPERATIONS/NUM_PRODUCERS)
 
@@ -33,9 +33,11 @@ int transactions[BUFFER_SIZE];
 int deposit = INITIAL_DEPOSIT;
 int read_index, write_index;
 
+// Semaphores
 sem_t sem_sync;
 sem_t sem_buffer;
 sem_t sem_consumer;
+sem_t sem_producer;
 
 // generates a number between -MAX_TRANSACTION and +MAX_TRANSACTION
 static inline int performRandomTransaction() {
@@ -59,18 +61,29 @@ void* performTransactions(void* x) {
 
     while (args->numOps > 0) {
         // produce the item
+
         int currentTransaction = performRandomTransaction();
         
         int ret = sem_wait(&sem_buffer);
         if(ret == -1) handle_error("Wait error in semaphore buffer performTransaction");
+        
+        ret = sem_wait(&sem_producer);
+        if(ret == -1) handle_error("Wait error in semaphore producer performTransaction");
+        
+
+
         // write the item and update write_index accordingly
             transactions[write_index] = currentTransaction;
             write_index = (write_index + 1) % BUFFER_SIZE;
+        
 
+        ret = sem_post(&sem_producer);
+        if(ret == -1) handle_error("Post error in semaphore producer performTransaction");
+            
         ret = sem_post(&sem_sync);
         if(ret == -1) handle_error("Post error in semaphore sync performTransaction");
-        
-        args->numOps--;
+
+            args->numOps--;
         //printf("P %d\n", args->numOps);
     }
 
@@ -83,18 +96,29 @@ void* processTransactions(void* x) {
     printf("Starting consumer thread %d\n", args->threadId);
 
     while (args->numOps > 0) {
-        // consume the item and update (shared) variable deposit
+        
 
         int ret = sem_wait(&sem_sync);
         if(ret == -1) handle_error("Wait error in semaphore sync processTransaction");
         
          ret = sem_wait(&sem_consumer);
         if(ret == -1) handle_error("Wait error in semaphore consumer processTransaction");
+        
 
-        deposit += transactions[read_index];
-        read_index = (read_index + 1) % BUFFER_SIZE;
-        if (read_index % 100 == 0)
-			printf("After the last 100 transactions balance is now %d.\n", deposit);
+
+        // CRITICAL SECTION
+    
+            // consume the item and update (sh ared) variable deposit
+            int item =  transactions[read_index];
+            deposit += item;
+            
+            read_index = (read_index + 1) % BUFFER_SIZE;
+
+            if (read_index % 100 == 0)
+                printf("After the last 100 transactions balance is now %d.\n", deposit);
+
+        // END CRITICAL SECTION
+
 
         ret = sem_post(&sem_consumer);
         if(ret == -1) handle_error("Post error in semaphore consumer processTransaction");
@@ -104,7 +128,9 @@ void* processTransactions(void* x) {
       
         ret = sem_post(&sem_buffer);
         if(ret == -1) handle_error("Post error in semaphore buffer processTransaction");
-        //printf("C %d\n", args->numOps);
+        
+        
+        // printf("C %d\n", args->numOps);
     }
 
     free(args);
@@ -117,23 +143,26 @@ int main(int argc, char* argv[]) {
     printf("\nInitial balance is %d. Press CTRL+C to quit.\n\n", INITIAL_DEPOSIT);
 
     // initialize read and write indexes
-    int ret;
     read_index  = 0;
     write_index = 0;
-
-    ret = sem_init(&sem_sync,0,0);
-    if(ret == -1 ) handle_error("Error in semaphore sync initialization");
-    ret = sem_init(&sem_buffer,0,BUFFER_SIZE);
-    if(ret == -1 ) handle_error("Error in semaphore buffer initialization");
-    ret = sem_init(&sem_consumer,0,1);
-    if(ret == -1 ) handle_error("Error in semaphore consumer initialization");
 
     // set seed for pseudo-random number generator: we use this to make
     // this code yield the same result across different runs, as long
     // as they are race-free and you make no mistakes :-)
     srand(PRNG_SEED);
 
+    int ret;
     pthread_t producer[NUM_PRODUCERS], consumer[NUM_CONSUMERS];
+
+// Semaphores Inizialisation
+    ret = sem_init(&sem_sync,0,0);
+    if(ret == -1 ) handle_error("Error in semaphore sync initialization");
+    ret = sem_init(&sem_buffer,0,BUFFER_SIZE);
+    if(ret == -1 ) handle_error("Error in semaphore buffer initialization");
+    ret = sem_init(&sem_consumer,0,1);
+    if(ret == -1 ) handle_error("Error in semaphore consumer initialization");
+    ret = sem_init(&sem_producer,0,1);
+    if(ret == -1 ) handle_error("Error in semaphore producer initialization");
 
     int i;
     for (i=0; i<NUM_PRODUCERS; ++i) {
@@ -166,13 +195,13 @@ int main(int argc, char* argv[]) {
         if (ret != 0) handle_error_en(ret,"Error in pthread join (consumer)");
     }
 
-
-
     printf("Final value for deposit: %d\n", deposit);
 
     if(sem_destroy(&sem_buffer) == -1) handle_error("sem_buffer destroy error");
     if(sem_destroy(&sem_sync) == -1) handle_error("sem_buffer sync error");
     if(sem_destroy(&sem_consumer) == -1) handle_error("sem_buffer consumer error");
+    if(sem_destroy(&sem_producer) == -1) handle_error("sem_buffer producer error");
+
 
     exit(EXIT_SUCCESS);
 }
