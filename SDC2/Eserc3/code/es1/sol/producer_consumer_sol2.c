@@ -9,11 +9,11 @@
 #define BUFFER_SIZE         128
 #define INITIAL_DEPOSIT     0
 #define MAX_TRANSACTION     1000
-#define NUM_CONSUMERS       1
+#define NUM_CONSUMERS       10
 #define NUM_PRODUCERS       1
 #define PRNG_SEED           0
 
-#define NUM_OPERATIONS      400
+#define NUM_OPERATIONS      40000
 #define OPS_PER_CONSUMER    (NUM_OPERATIONS/NUM_CONSUMERS)
 #define OPS_PER_PRODUCER    (NUM_OPERATIONS/NUM_PRODUCERS)
 
@@ -60,13 +60,18 @@ void* performTransactions(void* x) {
 
     while (args->numOps > 0) {
         // produce the item
+
+        int ret = sem_wait(&sem_buffer);
+        if(ret == -1) handle_error("Wait error in semaphore buffer performTransaction");
+        
         int currentTransaction = performRandomTransaction();
-
         // write the item and update write_index accordingly
-        transactions[write_index] = currentTransaction;
-        write_index = (write_index + 1) % BUFFER_SIZE;
-
-        args->numOps--;
+            transactions[write_index] = currentTransaction;
+            write_index = (write_index + 1) % BUFFER_SIZE;
+            args->numOps--;
+        
+        ret = sem_post(&sem_sync);
+        if(ret == -1) handle_error("Post error in semaphore sync performTransaction");
         //printf("P %d\n", args->numOps);
     }
 
@@ -79,13 +84,36 @@ void* processTransactions(void* x) {
     printf("Starting consumer thread %d\n", args->threadId);
 
     while (args->numOps > 0) {
-        // consume the item and update (shared) variable deposit
-        deposit += transactions[read_index];
-        read_index = (read_index + 1) % BUFFER_SIZE;
-        if (read_index % 100 == 0)
-			printf("After the last 100 transactions balance is now %d.\n", deposit);
+        
 
-        args->numOps--;
+        int ret = sem_wait(&sem_sync);
+        if(ret == -1) handle_error("Wait error in semaphore sync processTransaction");
+        
+         ret = sem_wait(&sem_consumer);
+        if(ret == -1) handle_error("Wait error in semaphore consumer processTransaction");
+        
+
+
+        // CRITICAL SECTION
+    
+            // consume the item and update (sh ared) variable deposit
+            deposit +=  transactions[read_index];
+            
+            read_index = (read_index + 1) % BUFFER_SIZE;
+            if (read_index % 100 == 0)
+                printf("After the last 100 transactions balance is now %d.\n", deposit);
+
+            args->numOps--;
+
+        // END CRITICAL SECTION
+
+        ret = sem_post(&sem_consumer);
+        if(ret == -1) handle_error("Post error in semaphore consumer processTransaction");
+        
+        ret = sem_post(&sem_buffer);
+        if(ret == -1) handle_error("Post error in semaphore buffer processTransaction");
+        
+        
         //printf("C %d\n", args->numOps);
     }
 
@@ -110,11 +138,12 @@ int main(int argc, char* argv[]) {
     int ret;
     pthread_t producer[NUM_PRODUCERS], consumer[NUM_CONSUMERS];
 
-    ret = sem_init(&sem_sync);
+// Semaphores Inizialisation
+    ret = sem_init(&sem_sync,0,0);
     if(ret == -1 ) handle_error("Error in semaphore sync initialization");
-    ret = sem_init(&sem_buffer);
+    ret = sem_init(&sem_buffer,0,BUFFER_SIZE);
     if(ret == -1 ) handle_error("Error in semaphore buffer initialization");
-    ret = sem_init(&sem_consumer);
+    ret = sem_init(&sem_consumer,0,NUM_CONSUMERS);
     if(ret == -1 ) handle_error("Error in semaphore consumer initialization");
 
     int i;
