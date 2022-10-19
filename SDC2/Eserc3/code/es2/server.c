@@ -47,17 +47,15 @@ int main(int argc, char* argv[]) {
      * We initialize the semaphore with a value equal to NUM_RESOURCES.
      **/
 
-    named_semaphore = sem_open(SEMAPHORE_NAME,O_CREAT | O_EXCL,0600,NUM_RESOURCES);    
 
-    if (named_semaphore == SEM_FAILED) {
-        char* errorStr = "Could not open the named semaphore";
-        handle_error(errorStr);
-    }    
+
     
     // creation might fail if the named semaphore hasn't been deleted since its last creation
     // first we have to unlink it
     sem_unlink(SEMAPHORE_NAME);
     named_semaphore = NULL;
+
+    named_semaphore = sem_open(SEMAPHORE_NAME,O_CREAT,MODE,NUM_RESOURCES);    
 
     if (named_semaphore == SEM_FAILED) {
         handle_error("Could not open the named semaphore");
