@@ -12,6 +12,7 @@
 #define LOG_INTERVAL        1
 #define NUM_RESOURCES       3
 #define SEMAPHORE_NAME      "/simple_scheduler"
+#define MODE                0600
 
 // we use a global variable to store the pointer to the named semaphore
 sem_t* named_semaphore;
@@ -26,9 +27,7 @@ void cleanup() {
      * in the system after the server terminates!
      * **/
 
-    /**
-     * TODO: EDIT AND IMPLEMENT THE OPERATION DESCRIBED ABOVE
-     **/
+    if(sem_close(named_semaphore) == -1) handle_error("Error in cleanup -> semaphore named_semaphore error");
 
     exit(0);
 }
@@ -48,11 +47,12 @@ int main(int argc, char* argv[]) {
      * We initialize the semaphore with a value equal to NUM_RESOURCES.
      **/
 
-    
-    
-    /**
-     * TODO: EDIT AND IMPLEMENT THE OPERATION DESCRIBED ABOVE
-     **/
+    named_semaphore = sem_open(SEMAPHORE_NAME,O_CREAT | O_EXCL,0600,NUM_RESOURCES);    
+
+    if (named_semaphore == SEM_FAILED) {
+        char* errorStr = "Could not open the named semaphore";
+        handle_error(errorStr);
+    }    
     
     // creation might fail if the named semaphore hasn't been deleted since its last creation
     // first we have to unlink it
