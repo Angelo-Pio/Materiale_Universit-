@@ -9,11 +9,11 @@
 #define BUFFER_SIZE         128
 #define INITIAL_DEPOSIT     0
 #define MAX_TRANSACTION     1000
-#define NUM_CONSUMERS       1
-#define NUM_PRODUCERS       1
+#define NUM_CONSUMERS       10
+#define NUM_PRODUCERS       5
 #define PRNG_SEED           0
 
-#define NUM_OPERATIONS      400000
+#define NUM_OPERATIONS      4000000
 #define OPS_PER_CONSUMER    (NUM_OPERATIONS/NUM_CONSUMERS)
 #define OPS_PER_PRODUCER    (NUM_OPERATIONS/NUM_PRODUCERS)
 
@@ -33,12 +33,11 @@ int transactions[BUFFER_SIZE];
 int deposit = INITIAL_DEPOSIT;
 int read_index, write_index;
 
-sem_t n ;
-sem_t e ;
-
-
-
-
+// Semaphores
+sem_t sem_sync;
+sem_t sem_buffer;
+sem_t sem_consumer;
+sem_t sem_producer;
 
 // generates a number between -MAX_TRANSACTION and +MAX_TRANSACTION
 static inline int performRandomTransaction() {
@@ -62,18 +61,29 @@ void* performTransactions(void* x) {
 
     while (args->numOps > 0) {
         // produce the item
+
         int currentTransaction = performRandomTransaction();
+        
+        int ret = sem_wait(&sem_buffer);
+        if(ret == -1) handle_error("Wait error in semaphore buffer performTransaction");
+        
+        ret = sem_wait(&sem_producer);
+        if(ret == -1) handle_error("Wait error in semaphore producer performTransaction");
+        
 
-        int ret = sem_wait(&e);
-        if(ret == -1 ) handle_error("Wait error in performTransaction");
+
         // write the item and update write_index accordingly
-        transactions[write_index] = currentTransaction;
-        write_index = (write_index + 1) % BUFFER_SIZE;
+            transactions[write_index] = currentTransaction;
+            write_index = (write_index + 1) % BUFFER_SIZE;
+        
 
-        args->numOps--;
+        ret = sem_post(&sem_producer);
+        if(ret == -1) handle_error("Post error in semaphore producer performTransaction");
+            
+        ret = sem_post(&sem_sync);
+        if(ret == -1) handle_error("Post error in semaphore sync performTransaction");
 
-        ret = sem_post(&n);
-        if(ret == -1 ) handle_error("Post error in performTransaction");
+            args->numOps--;
         //printf("P %d\n", args->numOps);
     }
 
@@ -86,25 +96,41 @@ void* processTransactions(void* x) {
     printf("Starting consumer thread %d\n", args->threadId);
 
     while (args->numOps > 0) {
-
-        int ret = sem_wait(&n);
-        if(ret == -1) handle_error("Wait error in process Transaction");
-
-        int item = transactions[read_index];
-        // printf("Transaction value: %d \n", item);
-        read_index = (read_index + 1) % BUFFER_SIZE;
-        args->numOps--;
         
-        ret = sem_post(&e);
-        if(ret == -1) handle_error("Post error in process Transaction");
 
-        // consume the item and update (shared) variable deposit
-        deposit += item;
-        if (read_index % 100 == 0)
-			printf("After the last 100 transactions balance is now %d.\n", deposit);
+        int ret = sem_wait(&sem_sync);
+        if(ret == -1) handle_error("Wait error in semaphore sync processTransaction");
+        
+         ret = sem_wait(&sem_consumer);
+        if(ret == -1) handle_error("Wait error in semaphore consumer processTransaction");
+        
 
 
-        //printf("C %d\n", args->numOps);
+        // CRITICAL SECTION
+    
+            // consume the item and update (sh ared) variable deposit
+            int item =  transactions[read_index];
+            deposit += item;
+            
+            read_index = (read_index + 1) % BUFFER_SIZE;
+
+            if (read_index % 100 == 0)
+                printf("After the last 100 transactions balance is now %d.\n", deposit);
+
+        // END CRITICAL SECTION
+
+
+        ret = sem_post(&sem_consumer);
+        if(ret == -1) handle_error("Post error in semaphore consumer processTransaction");
+        
+        args->numOps--;
+
+      
+        ret = sem_post(&sem_buffer);
+        if(ret == -1) handle_error("Post error in semaphore buffer processTransaction");
+        
+        
+        // printf("C %d\n", args->numOps);
     }
 
     free(args);
@@ -128,17 +154,17 @@ int main(int argc, char* argv[]) {
     int ret;
     pthread_t producer[NUM_PRODUCERS], consumer[NUM_CONSUMERS];
 
-    // Initialize Semaphores################
-    ret = sem_init(&n,0, 0);
-    if(ret != 0 ) handle_error_en(ret,"Error in initalization of semaphore n");
-
-    ret = sem_init(&e,0, BUFFER_SIZE);
-    if(ret != 0 ) handle_error_en(ret,"Error in initalization of semaphore e");
-
-// Creation of producers and consumers
+// Semaphores Inizialisation
+    ret = sem_init(&sem_sync,0,0);
+    if(ret == -1 ) handle_error("Error in semaphore sync initialization");
+    ret = sem_init(&sem_buffer,0,BUFFER_SIZE);
+    if(ret == -1 ) handle_error("Error in semaphore buffer initialization");
+    ret = sem_init(&sem_consumer,0,1);
+    if(ret == -1 ) handle_error("Error in semaphore consumer initialization");
+    ret = sem_init(&sem_producer,0,1);
+    if(ret == -1 ) handle_error("Error in semaphore producer initialization");
 
     int i;
-    // Producers
     for (i=0; i<NUM_PRODUCERS; ++i) {
         thread_args_t* arg = malloc(sizeof(thread_args_t));
         arg->threadId = i;
@@ -149,7 +175,6 @@ int main(int argc, char* argv[]) {
     }
 
     int j;
-    // Consumers
     for (j=0; j<NUM_CONSUMERS; ++j) {
         thread_args_t* arg = malloc(sizeof(thread_args_t));
         arg->threadId = j;
@@ -159,7 +184,7 @@ int main(int argc, char* argv[]) {
         if (ret != 0) handle_error_en(ret,"Error in pthread create (consumer)");
     }
 
-// join on threads
+    // join on threads
     for (i=0; i<NUM_PRODUCERS; ++i) {
         ret = pthread_join(producer[i], NULL);
         if (ret != 0) handle_error_en(ret,"Error in pthread join (producer)");
@@ -171,6 +196,12 @@ int main(int argc, char* argv[]) {
     }
 
     printf("Final value for deposit: %d\n", deposit);
+
+    if(sem_destroy(&sem_buffer) == -1) handle_error("sem_buffer destroy error");
+    if(sem_destroy(&sem_sync) == -1) handle_error("sem_buffer sync error");
+    if(sem_destroy(&sem_consumer) == -1) handle_error("sem_buffer consumer error");
+    if(sem_destroy(&sem_producer) == -1) handle_error("sem_buffer producer error");
+
 
     exit(EXIT_SUCCESS);
 }
