@@ -14,7 +14,7 @@
 
 // definizione struttura memoria
 struct shared_memory {
-    int buf [BUFFER_SIZE];
+    int buf[BUFFER_SIZE];
     int read_index;
     int write_index;
 };
@@ -28,6 +28,15 @@ sem_t *sem_empty, *sem_filled, *sem_cs;
 
 
 void openMemory() {
+
+
+    fd_shm = shm_open(SH_MEM_NAME,O_RDONLY,0600);
+    if (fd_shm < 0) handle_error("Error: opening of shared memory failed");
+    
+
+    myshm_ptr = (struct shared_memory*) mmap(0,sizeof(struct shared_memory),PROT_READ, MAP_SHARED,fd_shm,0);
+    if ( myshm_ptr == MAP_FAILED) handle_error("Error: opening of shared memory failed");
+
     /** COMPLETE THE FOLLOWING CODE BLOCK
      *
      * Request shared memory to the kernel and map the shared memory in the shared_mem_ptr variable.
@@ -39,6 +48,17 @@ void closeMemory() {
      *
      * unmap the shared memory and close its descriptor
      **/
+
+    int ret ;
+    ret = munmap(myshm_ptr, sizeof(myshm_ptr));
+    if(ret < 0) {
+        handle_error("Error, myshm_ptr unmapping failed");
+    }
+
+     ret = close(fd_shm);
+    if(ret < 0) {
+        handle_error("Error, myshm_ptr closing failed");
+    }
 }
 
 
@@ -96,6 +116,10 @@ void consume(int id, int numOps) {
          * Complete the following code:
          * read value from buffer inside the shared memory and update the consumer position
          */
+        int p = myshm_ptr->read_index;
+        int value = myshm_ptr->buf[p];
+        myshm_ptr->read_index++;
+
 
 
         ret = sem_post(sem_cs);

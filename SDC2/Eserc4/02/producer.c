@@ -14,7 +14,7 @@
 
 // definizione struttura memoria
 struct shared_memory {
-    int buf [BUFFER_SIZE];
+    int buf[BUFFER_SIZE];
     int read_index;
     int write_index;
 };
@@ -27,6 +27,18 @@ int fd_shm;
 sem_t *sem_empty, *sem_filled, *sem_cs;
 
 void initMemory() {
+
+    int ret;
+
+    fd_shm =  shm_open(SH_MEM_NAME,O_CREAT | O_RDWR , 0600);
+    if (fd_shm < 0) handle_error("Error: opening of shared memory failed");
+    
+    ret = ftruncate(fd_shm,sizeof(struct shared_memory ))    ;
+    if (ret < 0) handle_error("Error: sizing of shared memory failed");
+    
+    myshm_ptr = (struct shared_memory*) mmap(0,sizeof(struct shared_memory),PROT_WRITE,MAP_SHARED,fd_shm,0);
+    if ( myshm_ptr == MAP_FAILED) handle_error("Error: opening of shared memory failed");
+
     /** COMPLETE THE FOLLOWING CODE BLOCK
      *
      * Request the kernel to creare a shared memory, set its size to the size of
@@ -41,6 +53,24 @@ void closeMemory() {
      *
      * unmap the shared memory, unlink the shared memory and close its descriptor
      **/
+
+    int ret ;
+    ret = munmap(myshm_ptr, sizeof(myshm_ptr));
+    if(ret < 0) {
+        handle_error("Error, myshm_ptr unmapping failed");
+    }
+
+    ret = shm_unlink(SH_MEM_NAME);
+    if(ret < 0) {
+        handle_error("Error, myshm_ptr unlink failed");
+    }
+
+    ret = close(fd_shm);
+    if(ret < 0) {
+        handle_error("Error, myshm_ptr closing failed");
+    }
+
+
 
 }
 
@@ -100,10 +130,14 @@ void produce(int id, int numOps) {
         ret = sem_wait(sem_cs);
         if (ret) handle_error("sem_wait cs");
 
-        /**
+        /** 
          * Complete the following code:
          * write value in the buffer inside the shared memory and update the producer position
          */
+        int p = myshm_ptr->write_index;
+        myshm_ptr->buf[p] = value;
+        myshm_ptr->write_index++;
+
 
 
         ret = sem_post(sem_cs);
@@ -113,6 +147,7 @@ void produce(int id, int numOps) {
         if (ret) handle_error("sem_post filled");
 
         localSum += value;
+        // printf("Producer %d running. Local sum is %d\n", id, localSum);
         numOps--;
     }
     printf("Producer %d ended. Local sum is %d\n", id, localSum);
