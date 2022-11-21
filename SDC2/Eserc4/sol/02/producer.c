@@ -14,7 +14,7 @@
 
 // definizione struttura memoria
 struct shared_memory {
-    int buf[BUFFER_SIZE];
+    int buf [BUFFER_SIZE];
     int read_index;
     int write_index;
 };
@@ -27,25 +27,25 @@ int fd_shm;
 sem_t *sem_empty, *sem_filled, *sem_cs;
 
 void initMemory() {
-
-    int ret;
-
-    fd_shm =  shm_open(SH_MEM_NAME,O_CREAT | O_RDWR , 0600);
-    if (fd_shm < 0) handle_error("Error: opening of shared memory failed");
-    
-    ret = ftruncate(fd_shm,sizeof(struct shared_memory ))    ;
-    if (ret < 0) handle_error("Error: sizing of shared memory failed");
-    
-    myshm_ptr = (struct shared_memory*) mmap(0,sizeof(struct shared_memory),PROT_WRITE | PROT_READ,  MAP_SHARED,fd_shm,0);
-    if ( myshm_ptr == MAP_FAILED) handle_error("Error: opening of shared memory failed");
-
     /** COMPLETE THE FOLLOWING CODE BLOCK
      *
      * Request the kernel to creare a shared memory, set its size to the size of
      * struct shared_memory, and map the shared memory in the shared_mem_ptr variable.
      * Initialize the shared memory to 0.
      **/
+    if ((fd_shm = shm_open (SH_MEM_NAME, O_RDWR | O_CREAT | O_EXCL, 0660)) == -1)
+        handle_error("shm_open");
 
+    if (ftruncate (fd_shm, sizeof (struct shared_memory)) == -1)
+       handle_error ("ftruncate");
+
+    if ((myshm_ptr = mmap (NULL, sizeof(struct shared_memory), PROT_READ | PROT_WRITE, MAP_SHARED,
+            fd_shm, 0)) == MAP_FAILED)
+       handle_error ("mmap");
+
+    // Initialize the shared memory
+    // myshm_ptr -> read_index = myshm_ptr -> write_index = 0;
+    memset(myshm_ptr, 0, sizeof(struct shared_memory));
 }
 
 void closeMemory() {
@@ -53,31 +53,25 @@ void closeMemory() {
      *
      * unmap the shared memory, unlink the shared memory and close its descriptor
      **/
+	// mmap cleanup
+    int ret;
+	ret = munmap(myshm_ptr, sizeof(struct shared_memory));
+	if (ret == -1)
+        handle_error("munmap");
 
-    int ret ;
-    ret = munmap(myshm_ptr, sizeof(myshm_ptr));
-    if(ret < 0) {
-        handle_error("Error, myshm_ptr unmapping failed");
-    }
+    //close descriptor
+    close(fd_shm);
 
-    ret = close(fd_shm);
-    if(ret < 0) {
-        handle_error("Error, myshm_ptr closing failed");
-    }
-    ret = shm_unlink(SH_MEM_NAME);
-    if(ret < 0) {
-        handle_error("Error, myshm_ptr unlink failed");
-    }
-
-
-
-
+	// shm_open cleanup
+	ret = shm_unlink(SH_MEM_NAME);
+	if (ret == -1)
+        handle_error("unlink");
 }
 
 
 
 void initSemaphores() {
-    // delete state semaphores from a previous crash (if any)
+    // delete stale semaphores from a previous crash (if any)
     sem_unlink(SEMNAME_FILLED);
     sem_unlink(SEMNAME_EMPTY);
     sem_unlink(SEMNAME_CS_PROD);
@@ -106,17 +100,16 @@ void closeSemaphores() {
 
 // generates a number between -MAX_TRANSACTION and +MAX_TRANSACTION
 static inline int performRandomTransaction() {
-    // struct timespec pause = {0};
-    // pause.tv_nsec = 10000000; // 10 ms (100*10^6 ns)
-    // nanosleep(&pause, NULL);
+    struct timespec pause = {0};
+    pause.tv_nsec = 10000000; // 10 ms (100*10^6 ns)
+    nanosleep(&pause, NULL);
 
-    // int amount = rand() % (2 * MAX_TRANSACTION); // {0, ..., 2*MAX_TRANSACTION - 1}
-    // if (amount >= MAX_TRANSACTION) {
-    //     return MAX_TRANSACTION - (amount+1); // {-MAX_TRANSACTION, ..., -1}
-    // } else {
-    //     return amount + 1; // {1, ..., MAX_TRANSACTION}
-    // }
-    return 1;
+    int amount = rand() % (2 * MAX_TRANSACTION); // {0, ..., 2*MAX_TRANSACTION - 1}
+    if (amount >= MAX_TRANSACTION) {
+        return MAX_TRANSACTION - (amount+1); // {-MAX_TRANSACTION, ..., -1}
+    } else {
+        return amount + 1; // {1, ..., MAX_TRANSACTION}
+    }
 }
 
 void produce(int id, int numOps) {
@@ -131,19 +124,15 @@ void produce(int id, int numOps) {
         ret = sem_wait(sem_cs);
         if (ret) handle_error("sem_wait cs");
 
-        /** 
+        /**
          * Complete the following code:
          * write value in the buffer inside the shared memory and update the producer position
          */
-        int p = myshm_ptr->write_index;
-        myshm_ptr->buf[p] = value;
+        myshm_ptr->buf[myshm_ptr->write_index] = value;
         myshm_ptr->write_index++;
-
-// ! Error
         if (myshm_ptr->write_index == BUFFER_SIZE)
             myshm_ptr->write_index = 0;
-
-
+        /**/
 
         ret = sem_post(sem_cs);
         if (ret) handle_error("sem_post cs");
@@ -152,7 +141,6 @@ void produce(int id, int numOps) {
         if (ret) handle_error("sem_post filled");
 
         localSum += value;
-        // printf("Producer %d running. Local sum is %d\n", id, localSum);
         numOps--;
     }
     printf("Producer %d ended. Local sum is %d\n", id, localSum);
