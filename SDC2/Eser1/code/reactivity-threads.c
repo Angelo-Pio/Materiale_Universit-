@@ -7,6 +7,12 @@
 #include <pthread.h>
 
 void do_work() {
+	int c = 0;
+	for (int i = 0; i < 1000; i++)
+	{
+		c++;
+	}
+	
 	return;
 }
 
@@ -31,31 +37,25 @@ int main(int argc, char **argv) {
 	int i, ret;
 
 	begin(&t);
-	pthread_t* threads = malloc(n* sizeof(pthread_t));
 	for (i = 0; i < n; i++) {
-		ret = pthread_create(&threads[i], NULL, thread_fun, NULL);
+		pthread_t thread;
+		ret = pthread_create(&thread, NULL, thread_fun, NULL);
 		if (ret != 0) {
 			fprintf(stderr, "Can't create a new thread, error %d\n", ret);
 			exit(EXIT_FAILURE);
 		}
-	}
-	for (int j = 0; j < n; j++)
-	{
-		ret = pthread_join(threads[j], NULL);
+		ret = pthread_join(thread, NULL);
 		if (ret != 0) {
 			fprintf(stderr, "Cannot join on thread, error %d\n", ret);
 			exit(EXIT_FAILURE);
 		}
-			
 	}
-	
 	end(&t);
 	sum += get_microseconds(&t);
 	
 	// compute statistics
 	unsigned long thread_avg = sum / n;
 	printf("Average: %lu microseconds\n", thread_avg);
-
-	free(threads);
 	return EXIT_SUCCESS;
+
 }

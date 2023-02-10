@@ -12,9 +12,13 @@ int n = N, m = M, v = V;
 
 void* thread_work(void *arg) {
 	int i;
+
+	unsigned long * ret = (unsigned long*)calloc(1,sizeof(unsigned long));
+
 	for (i = 0; i < m; i++)
-		shared_variable += v;
-	return NULL;
+		*ret += v;
+
+	pthread_exit(ret);
 }
 
 int main(int argc, char **argv)
@@ -35,8 +39,12 @@ int main(int argc, char **argv)
 	printf("ok\n");
 
 	printf("Waiting for the termination of all the %d threads...", n); fflush(stdout);
-	for (i = 0; i < n; i++)
-		pthread_join(threads[i], NULL);
+	unsigned long * ret;
+	for (i = 0; i < n; i++){
+		pthread_join(threads[i],(void**) &ret);
+		shared_variable += *ret;
+		free(ret);
+	}
 	printf("ok\n");
 
 	unsigned long int expected_value = (unsigned long int)n*m*v;

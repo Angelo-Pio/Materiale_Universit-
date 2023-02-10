@@ -7,6 +7,11 @@
 #include <pthread.h>
 
 void do_work() {
+	int c = 0;
+	for (int i = 0; i < 1000; i++)
+	{
+		c++;
+	}
 	return;
 }
 
@@ -47,4 +52,3 @@ int main(int argc, char **argv) {
 	
 	return EXIT_SUCCESS;
 }
-//speedup prima dei cambiamenti :
