@@ -15,21 +15,21 @@ int main(int argc, char* argv[]) {
     // variables for handling a socket
     int socket_desc;
     struct sockaddr_in server_addr = {0}; // some fields are required to be filled with 0
-    /**
+
+    /** [SOLUTION]
      *  TODO: create a socket for contacting the server
      *
      * Suggestions:
      * - protocollo AF_INET
-     * - tipo SOCK_STREAM
+     * - tipo SOCK_DGRAM
      */
-
-    socket_desc = socket(AF_INET,SOCK_STREAM,0);
-    if(socket_desc == -1) handle_error("SOcket could not be opened");
-
+    socket_desc = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_desc < 0)
+        handle_error("Could not create socket");
 
     if (DEBUG) fprintf(stderr, "Socket created...\n");
 
-    /**
+    /** [SOLUTION]
      *  TODO: set up parameters for the connection and initiate a connection to the server
      *
      * Suggestions:
@@ -37,35 +37,17 @@ int main(int argc, char* argv[]) {
      * - - server_addr.sin_addr.s_addr: we must specify the server address
      * - - server_addr.sin_family,
      * - - server_addr.sin_port (using htons() method)
-     * - initiate a connection to the server
-     * - - attention to the bind method:
-     * - - it requires as second field struct sockaddr* addr, but our address is a struct sockaddr_in, hence we must cast it (struct sockaddr*) &server_addr
      */
+    //
     server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDRESS);
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    if(connect(socket_desc,(struct sockaddr*) &server_addr, sizeof(struct sockaddr_in)) == -1) handle_error("Error connecting");
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(SERVER_PORT); // don't forget about network byte order!
 
-
-    if (DEBUG) fprintf(stderr, "Connection established!\n");
 
     char buf[1024];
     size_t buf_len = sizeof(buf);
     int msg_len;
     memset(buf,0,buf_len);
-
-   recv_bytes = 0;
-        do {
-            ret = recv(socket_desc, buf + recv_bytes, 1, 0);
-            if (ret == -1 && errno == EINTR) continue;
-            if (ret == -1) handle_error("Cannot read from the socket");
-            if (ret == 0) break;
-		} while ( buf[recv_bytes++] != '\n' );
-    printf("%s", buf);
-
-
-    if (DEBUG) fprintf(stderr, "Received message of %d bytes...\n",recv_bytes);
-
 
     // main loop
     while (1) {
@@ -86,30 +68,27 @@ int main(int argc, char* argv[]) {
         msg_len = strlen(buf);
 //        buf[--msg_len] = '\0'; // remove '\n' from the end of the message
 
-		/**
+		/** [SOLUTION]
          *  TODO: send message to server
          *
          * Suggestions:
-         * - send() with flags = 0 is equivalent to write() to a descriptor
+         * - sendto() with flags = 0 is equivalent to write() to a descriptor
          * - the number of bytes to send is msg_len as we have discarded '\n'
-         * - deal with partially sent messages
+         * - don't deal with partially sent messages, but deal with other errors
          * - message size IS NOT buf size
          */
-
-        bytes_sent = 0;
-            while (bytes_sent < msg_len)
-            {
-                int ret = send(socket_desc, buf + bytes_sent,msg_len - bytes_sent,0);
-                if(ret == -1 && errno == EINTR) continue;
-                if(ret == -1) handle_error("Error in sending message to client");
-                // other
-                bytes_sent += ret;
-            }
+        bytes_sent=0;
+        while ( bytes_sent < msg_len) {
+            ret = sendto(socket_desc, buf, msg_len, 0, (struct sockaddr*) &server_addr, sizeof(struct sockaddr_in));
+            if (ret == -1 && errno == EINTR) continue;
+            if (ret == -1) handle_error("Cannot write to the socket");
+            bytes_sent = ret;
+        }
 
         if (DEBUG) fprintf(stderr, "Sent message of %d bytes...\n", bytes_sent);
 
 
-        /**
+        /** [SOLUTION]
          *  TODO: After a quit command we won't receive any more data from
          *  the server, thus we must exit the main loop.
          *
@@ -121,40 +100,44 @@ int main(int argc, char* argv[]) {
          *   memcmp(const void *ptr1, const void *ptr2, size_t num)
          * - exit from the cycle when there is nothing left to receive
          */
+		if (msg_len == quit_command_len && !memcmp(buf, quit_command, quit_command_len)){
 
-        if(msg_len == quit_command_len || !memcmp(buf,quit_command,quit_command_len)) break;
+            if (DEBUG) fprintf(stderr, "Sent QUIT command ...\n");
+             break;
+        }
 
-
-        /**
+        /** [SOLUTION]
          *  TODO: read message from server
          * Suggestions:
-         * - recv() with flags = 0 is equivalent to read() from a descriptor
+         * - recvfrom() with flags = 0 is equivalent to read() from a descriptor
          * - for sockets, we get a 0 return value only when the peer closes
          *   the connection: if there are no bytes to read and we invoke
-         *   recv() we will get stuck, because the call is blocking!
-         * - deal with partially sent messages (we do not know the message size)
+         *   recvfrom() we will get stuck, because the call is blocking!
+         * - don't deal with partially sent messages in UDP, but deal with other errors
          */
 
-       recv_bytes = 0;
-        do {
-            ret = recv(socket_desc, buf + recv_bytes, 1, 0);
+	recv_bytes = 0;
+    	do {
+            ret = recvfrom(socket_desc, buf, buf_len, 0, NULL, NULL);
             if (ret == -1 && errno == EINTR) continue;
             if (ret == -1) handle_error("Cannot read from the socket");
-            if (ret == 0) break;
-		} while ( buf[recv_bytes++] != '\n' );
-        
+	        if (ret == 0) break;
+	        recv_bytes = ret;
+
+	    } while ( recv_bytes<=0 );
 
         if (DEBUG) fprintf(stderr, "Received answer of %d bytes...\n",recv_bytes);
 
-        printf("Server response: %s\n", buf);
+        printf("Server response: %s\n", buf); // no need to insert '\0'
     }
 
 
-    /**
+    /** [SOLUTION]
      *  TODO: close socket and release unused resources
      */
+    ret = close(socket_desc);
+    if (ret < 0) handle_error("Cannot close the socket");
 
-    close(socket_desc);
     if (DEBUG) fprintf(stderr, "Socket closed...\n");
 
     if (DEBUG) fprintf(stderr, "Exiting...\n");
