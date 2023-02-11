@@ -11,14 +11,9 @@
 
 #include "common.h"
 
+// array di N semafori per accedere in mutua esclusione ad N contatori
+sem_t semaphores[N];
 unsigned int shared_counters[N];
-/**
-    * COMPLETARE QUI
-    * 
-    * Obiettivi:
-    * - dichiarare i semafori necessari per garantire la mutua esclusione 
-    *   nell'accesso alle celle dell'array shared_counters
-    **/	 
 
 // struttura dati con gli argomenti per thread connection_handler
 typedef struct handler_args_s {
@@ -35,8 +30,13 @@ unsigned int process_resource(unsigned int client_id, unsigned int resource_id) 
      * - gestire la mutua esclusione tra thread che provano ad accedere
      *   alla cella 'resource_id'-esima nella sezione critica
      * - gestire eventuali errori
-     **/	 
-
+    **/	 
+    
+    int ret;
+    
+    ret = sem_wait(&semaphores[resource_id]);
+    if(ret) handle_error("Errore nella wait");
+    
     printf("Risorsa %u LOCKED dal client %u! Processamento in corso...\n", resource_id, client_id);
     
     /* inizio sezione critica */
@@ -45,8 +45,9 @@ unsigned int process_resource(unsigned int client_id, unsigned int resource_id) 
     sleep(SLEEP_TIME);
     /* fine sezione critica */
     
-    printf("Risorsa %u UNLOCKED\n", resource_id);
+    ret = sem_post(&semaphores[resource_id]);
     
+    printf("Risorsa %u UNLOCKED\n", resource_id);
     return counter_updated;
 }
 
@@ -58,12 +59,10 @@ void* connection_handler(void* arg) {
     int socket_desc = args->socket_desc;
     struct sockaddr_in* client_addr = args->client_addr;
     unsigned int client_id = args->client_id;
-    
     char buf[1024];
-    
     char* quit_command = SERVER_COMMAND;
     size_t quit_command_len = strlen(quit_command);
-    
+
     // parso il client IP address e la porta
     char client_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(client_addr->sin_addr), client_ip, INET_ADDRSTRLEN);
@@ -73,9 +72,7 @@ void* connection_handler(void* arg) {
     // ciclo di scambio messaggi
     unsigned int resource_id;
     while (1) {
-    
-        int bytes_read;
-        /**
+         /**
          * COMPLETARE QUI
          *
          * Obiettivi:
@@ -90,8 +87,13 @@ void* connection_handler(void* arg) {
          * cui lunghezza NON è nota a priori) è il terminatore di riga '\n'.
          **/
         
-        
-        
+        int bytes_read = 0;
+        do {
+            ret = recv(socket_desc, buf + bytes_read, 1, 0);
+            if (ret == -1 && errno == EINTR) continue;
+            if (ret == -1) handle_error("Errore nella lettura dalla socket");
+            if (ret ==  0) break;
+        }while(buf[bytes_read++] != '\n');
         
         size_t msg_len = bytes_read - 1; // NON MODIFICARE (vedi commenti sopra)
         
@@ -115,9 +117,18 @@ void* connection_handler(void* arg) {
          * - gestire eventuali interruzioni ed errori
          * - assicurarsi che tutti i byte siano stati scritti
          **/
+        
+         int bytes_sent = 0;
+         while(bytes_sent < msg_len) {
+            ret = send(socket_desc, buf+bytes_sent, msg_len-bytes_sent, 0);
+            if (ret == -1 && errno == EINTR) continue;
+            if (ret == -1) handle_error("Errore nella scrittura sulla socket");
+            bytes_sent += ret;
+        }
+         
     }
-    
-    /**
+
+    /*
      * COMPLETARE QUI
      * 
      * Obiettivi:
@@ -126,8 +137,11 @@ void* connection_handler(void* arg) {
      * - liberare memoria in uso al thread
      */
      
-    printf("Thread connection_handler terminato\n");
+    ret = close(socket_desc);
+    if(ret) handle_error("Errore nella chiusura della socket");
+    free(arg);
     
+    printf("Thread connection_handler terminato\n");
     pthread_exit(NULL);
 }
 
@@ -137,11 +151,16 @@ int main(int argc, char* argv[]) {
      * COMPLETARE QUI
      * 
      * Obiettivi:
-     * - inizializzare i semafori 
+     * - inizializzare gli N semafori nell'array 'semaphores'
      * - gestire eventuali errori di inizializzazione
      **/
-    int ret;
     
+    int ret;
+    int i;
+    for(i = 0; i < N; i++) {
+       ret = sem_init(&semaphores[i], 0, 1);
+       if(ret) handle_error("Errore nell’inizializzazione del semaforo");
+    }
     
     // creo le strutture per la socket
     int socket_desc, client_desc;
@@ -165,18 +184,18 @@ int main(int argc, char* argv[]) {
     // bind & listen
     ret = bind(socket_desc, (struct sockaddr*) &server_addr, sockaddr_len);
     if(ret) handle_error("Impossibile fare il binding indirizzo-socket");
-
+    
     ret = listen(socket_desc, 16);
     if(ret) handle_error("Impossibile ascoltare dalla socket");
-
-
+        
     // loop per gestire connessioni in ingresso con nuovi thread
     printf("Server pronto ad accettare connessioni!\n");
     unsigned int client_id = 0;
-    while (1) { 
-        
+    
+    while (1) {
+    
         pthread_t thread;
-        // alloco un buffer client_addr per la connessione
+        //alloco un buffer client_addr per la connessione
         struct sockaddr_in* client_addr = calloc(1, sizeof(struct sockaddr_in));
     
         // accetto connessioni in ingresso
@@ -199,7 +218,15 @@ int main(int argc, char* argv[]) {
          * operazioni di join sul thread appena creato.
          **/
         
+        handler_args_t* arg = calloc(1, sizeof(handler_args_t));
+        arg->socket_desc = client_desc;
+        arg->client_addr = client_addr;
+        arg->client_id = client_id;
+        ret = pthread_create(&thread, NULL, connection_handler, arg);
+        if(ret) handle_error_en(ret,"Errore nella creazione del thread");
         
+        ret = pthread_detach(thread);
+        if(ret) handle_error_en(ret,"Errore nel detach del thread");
         
         // incremento il client ID dopo ogni connessione accettata
         client_id++;
