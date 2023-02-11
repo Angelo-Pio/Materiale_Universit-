@@ -28,7 +28,7 @@ typedef struct handler_args_s
 #endif
 
 void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
-    int ret, recv_bytes;
+    int ret, recv_bytes = 0;
 
     char buf[1024];
     size_t buf_len = sizeof(buf);
@@ -46,6 +46,9 @@ void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
 
     char client_ip[INET_ADDRSTRLEN] = {0};
     uint16_t client_port = 0;
+
+    inet_ntop(AF_INET,&(client_addr->sin_addr),client_ip,INET_ADDRSTRLEN);
+    client_port = htons(client_addr->sin_port);
     
 
     sprintf(buf, "Hi! I'm an echo server. You are %s talking on port %hu.\nI will send you back whatever"
@@ -57,7 +60,15 @@ void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
     * Suggestions:
     * - Send to the client the welcome message written in buf
     **/
-    
+    int bytes_sent = 0;
+    while (bytes_sent < msg_len)
+    {
+        int ret = send(socket_desc, buf + bytes_sent,msg_len - bytes_sent,0);
+        if(ret == -1 && errno == EINTR) continue;
+        if(ret == -1) handle_error("Error in sending message to client");
+        // other
+        bytes_sent += ret;
+    }
 
     while (1) {
     
@@ -69,6 +80,34 @@ void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
         * - Check if it is the quit message, in that case exit from the loop;
         * - Otherwise send back to the client the received message;
         **/
+
+       recv_bytes = 0;
+        do
+        {
+            int ret = recv(socket_desc,buf + recv_bytes,1,0 );
+            if(ret == -1 && errno == EINTR) continue;
+            if(ret == -1 ) handle_error("Error receving message");
+            if(ret == 0) break;
+        } while (buf[recv_bytes++] != '\n');
+
+        if (DEBUG) fprintf(stderr, "Received command of %d bytes...\n",recv_bytes);
+
+        if(recv_bytes == quit_command_len || !memcmp(buf,quit_command,quit_command_len)) break;
+
+
+            bytes_sent = 0;
+            while (bytes_sent < recv_bytes)
+            {
+                int ret = send(socket_desc, buf + bytes_sent,recv_bytes - bytes_sent,0);
+                if(ret == -1 && errno == EINTR) continue;
+                if(ret == -1) handle_error("Error in sending message to client");
+                // other
+                bytes_sent += ret;
+            }
+
+
+        if (DEBUG) fprintf(stderr, "Sent message of %d bytes back...\n", bytes_sent);
+        
         
         
         
@@ -140,6 +179,26 @@ void mprocServer(int server_desc) {
          * - add a debug message in the child process to inform the
          *   user that the request has been handled
          **/
+
+        int pid = fork();
+        if(pid == -1){
+            handle_error("Error forking process");
+            exit(EXIT_FAILURE);
+        }
+        else if(pid == 0){
+            close(server_desc);
+            connection_handler(client_desc,&client_addr);
+            
+            if(DEBUG) printf("Child process [%d] has accepted user's request",getpid());
+
+            _exit(EXIT_SUCCESS);
+        }else{
+            if(DEBUG) printf("Child process has been created to handle the request");
+            close(client_desc);
+            memset(&client_addr, 0, sizeof(struct sockaddr_in));
+        }
+
+
     }
 }
 
@@ -180,8 +239,8 @@ void mthreadServer(int server_desc) {
          * - thread_connection_handler(void* arg) is the method to execute in
          *   the thread we are going to spawn, this method is a wrapper that will 
          *   call connection_handler with the right arguments.
-         * - allocate a handler_args_t data structure and populate it
-         *   with the arguments that will be passed to the thread
+         * * - allocate a handler_args_t data structure and populate it
+         *  * with the arguments that will be passed to the thread
          * - print a debug message to inform the user that a new thread
          *   has been created to handle the request
          * - since we don't need to pthread_join(), release libpthread's
@@ -190,6 +249,9 @@ void mthreadServer(int server_desc) {
          *   careful: resetting fields in client_addr won't work!
          **/
         pthread_t thread;
+        struct handler_args_t
+
+
     }
 }
 
