@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include "common.h"
 
 // semaforo named per gestire il grado di concorrenza nel server
@@ -49,6 +50,20 @@ void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
      *
      */
 
+    ret = sem_wait(sem_connections);
+    if(ret < 0) handle_error("Error in sem_wait ");
+
+    recv_bytes = 0;
+    do
+    {
+        ret = recv(socket_desc,buf + recv_bytes, buf_len - recv_bytes,0);
+        if(ret == -1 && errno == EINTR) continue;
+        if(ret == -1 ) handle_error("Error receiving message from client");
+        if(ret == 0 || ret == buf_len) break;
+
+        recv_bytes += ret;
+    } while (recv_bytes < buf_len);
+    
 
 
     strncpy(client_name, buf, client_name_len);
@@ -71,6 +86,21 @@ void connection_handler(int socket_desc, struct sockaddr_in* client_addr) {
      *
      */
 
+
+
+    int sent_bytes = 0;
+    do
+    {
+        ret = send(socket_desc,buf,1,0);
+        if(ret == -1 && errno == EINTR) continue;
+        if(ret == -1 ) handle_error("Error receiving message from client");
+
+    }while(buf[sent_bytes++] != '\n');
+    
+
+
+    ret = sem_post(sem_connections);
+    if(ret < 0) handle_error("Error in sem_post ");
 
 
     printf("Connessione del client [%s] chiusa \n", client_name);
@@ -102,7 +132,25 @@ void multi_process_server(int server_desc) {
          *
          */
 
-        int client_desc = 0; // DA MODIFICARE 
+        
+
+        int client_desc = accept(server_desc,(struct sockaddr *) &client_addr,( socklen_t * ) &sockaddr_len);
+        if(client_desc < 0) handle_error("Error accepting connection");
+
+        int pid = fork();
+        if(pid == -1){
+            handle_error("Error creating child process");
+            exit(EXIT_FAILURE);
+        }
+        if(pid == 0){
+             ret = close(server_desc);
+             if(ret < 0) handle_error("Error closing server descriptor in child process");
+             connection_handler(client_desc,&client_addr);
+            _exit(EXIT_SUCCESS);
+        }
+        ret = close(client_desc);
+        if(ret < 0) handle_error("Error closing closing child descriptor");
+        wait(&ret);
 
         memset(&client_addr, 0, sizeof(struct sockaddr_in));
     }
@@ -141,7 +189,14 @@ int main(int argc, char* argv[]) {
      *
      */
 
+    sem_unlink(SEMAPHORE_NAME);
 
+    // sem_connections = (sem_t *)malloc(sizeof(sem_t));
+
+    sem_connections = sem_open(SEMAPHORE_NAME,O_CREAT | O_EXCL,0666,MAX_CONNECTIONS);
+    if(sem_connections == SEM_FAILED) handle_error("Error opening semaphore");
+
+    puts("HERER");
 
 
     initialize_socket(&socket_desc, &server_addr);

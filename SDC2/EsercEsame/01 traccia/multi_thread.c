@@ -27,6 +27,7 @@ int write_index, read_index;
 
 /***/
 
+sem_t e ,s1, s2, n ;
 
 void producer_routine(int idx) {
 
@@ -45,8 +46,20 @@ void producer_routine(int idx) {
      for (i = 0; i < ITERATION_COUNT; i++) {
         int value = idx*ITERATION_COUNT + i;
 
+        ret = sem_wait(&e);
+        if(ret < 0) handle_error("error waiting for sem e");
+
+        ret = sem_wait(&s1);
+        if(ret < 0) handle_error("error waiting for sem s1");
+
         buffer[write_index] = value;
         write_index = (write_index + 1) % BUFFER_LENGTH;
+
+        ret = sem_post(&s1);
+        if(ret < 0) handle_error("error post for sem s1");
+
+        ret = sem_post(&n);
+        if(ret < 0) handle_error("error post for sem n");
 
         printf("[Thread #%d] inserito %d nel buffer\n", idx, value);
      }
@@ -68,8 +81,21 @@ void consumer_routine(int idx) {
      int i, ret;
      for (i = 0; i < ITERATION_COUNT; i++) {
 
+        ret = sem_wait(&n);
+        if(ret < 0) handle_error("error waiting for sem n");
+
+        ret = sem_wait(&s2);
+        if(ret < 0) handle_error("error waiting for sem s2");
+
         int value = buffer[read_index];
         read_index = (read_index + 1) % BUFFER_LENGTH;
+
+         ret = sem_post(&s2);
+        if(ret < 0) handle_error("error post for sem s2");
+
+        ret = sem_post(&e);
+        if(ret < 0) handle_error("error post for sem e");
+
 
         printf("[Thread #%d] letto %d dal buffer\n", idx, value);
      }
@@ -107,6 +133,21 @@ int main(int argc, char* argv[]) {
 
     /***/
 
+
+    ret = sem_init(&e,0,BUFFER_LENGTH);
+    if(ret < 0) handle_error("Error init semaphore e");
+
+    ret = sem_init(&s1,0,THREAD_COUNT/2);
+    if(ret < 0) handle_error("Error init semaphore s1");
+
+    ret = sem_init(&s2,0,THREAD_COUNT/2);
+    if(ret < 0) handle_error("Error init semaphore s2");
+
+    ret = sem_init(&n,0,0);
+    if(ret < 0) handle_error("Error init semaphore n");
+
+    puts("HERE");
+
     /**
      * COMPLETARE QUI
      *
@@ -123,6 +164,24 @@ int main(int argc, char* argv[]) {
      *   dovrà attendere la terminazione di ogni thread
      * 
      */
+    puts("HERE");
+    pthread_t threads[THREAD_COUNT];
+    for (int i = 0; i < THREAD_COUNT; i++)
+    {
+        thread_args_t* thread_args = (thread_args_t *) malloc(sizeof(thread_args_t));
+        thread_args->idx = i;
+        if(i >= THREAD_COUNT/2){
+
+            thread_args->role = PROD_ROLE;
+        }else{
+            thread_args->role = CONS_ROLE;
+        }
+
+        ret = pthread_create(&threads[i],0,thread_routine,thread_args);
+        if(ret != 0) handle_error("Error in creating threads");
+    }
+
+    
 
 
     /***/
@@ -136,6 +195,19 @@ int main(int argc, char* argv[]) {
      * - gestire gli errori
      */
 
+    for (int i = 0; i < THREAD_COUNT; i++)
+    {
+        ret = pthread_join(threads[i],NULL);
+        if(ret != 0) handle_error("Error in joining threads");
+    }
+    
+   
+    
+
+
+    
+
+
     /***/
 
     /**
@@ -148,6 +220,19 @@ int main(int argc, char* argv[]) {
 
 
     /***/
+
+    ret = sem_destroy(&e);
+    if(ret < 0) handle_error("Error destroying sem e ");
+
+    ret = sem_destroy(&s1);
+    if(ret < 0) handle_error("Error destroying sem s1");
+
+    ret = sem_destroy(&s2);
+    if(ret < 0) handle_error("Error destroying sem s2 ");
+
+    ret = sem_destroy(&n);
+    if(ret < 0) handle_error("Error destroying sem n ");
+  
 
     printf("[Main Thread] operazioni completate\n");
 
