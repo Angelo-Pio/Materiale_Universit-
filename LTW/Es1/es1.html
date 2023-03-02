@@ -1,0 +1,81 @@
+<!-- Esercizio #1 -->
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Esercizio #1</title>
+    <meta name="description" content="Questo è il primo esercizio">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <form method="post"  id="es1" name="es1" action="" enctype="multipart/form-data">
+    
+        <br><br>
+        <input id="nome" type="text" maxlength="30" size="30" name="nome" placeholder="name" required><br><br>
+
+        <input id="cognome" type="text" maxlength="40"  size="40" name="cognome" placeholder="cognome"required> <br><br> 
+        
+        
+        <input name="matricola"  type="number" size="7" maxlength="7" max="1234567" min="0" placeholder="matricola"required><br><br>
+
+        <select name="regione_residenza"required>
+            <option value="Abruzzo">Abruzzo</option>
+            <option value="Basilicata">Basilicata</option>
+            <option value="Calabria">Calabria</option>
+            <option value="Campania">Campania</option>
+            <option value="Emilia-Romagna">Emilia-Romagna</option>
+            <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+            <option value="Lazio">Lazio</option>
+            <option value="Liguria">Liguria</option>
+            <option value="Lombardia">Lombardia</option>
+            <option value="Marche">Marche</option>
+            <option value="Molise">Molise</option>
+            <option value="Piemonte">Piemonte</option>
+            <option value="Puglia">Puglia</option>
+            <option value="Sardegna">Sardegna</option>
+            <option value="Sicilia">Sicilia</option>
+            <option value="Toscana">Toscana</option>
+            <option value="Trentino-Alto Adige/Südtirol">Trentino-Alto Adige/Südtirol</option>
+            <option value="Umbria">Umbria</option>
+            <option value="Valle d'Aosta/Vallée d'Aoste">Valle d'Aosta/Vallée d'Aoste</option>
+            <option value="Veneto">Veneto</option>
+        </select><br><br> 
+
+        <input type="email" name="email" placeholder="email"><br><br> 
+
+        <input type="tel" name="phoneNumber" placeholder="phoneNumber" maxlength="16"  size="16"> <br><br> 
+
+        
+        <input type="text" list="stati" autocomplete="on">
+        <datalist id="stati" name="datalist">
+            <option value="in corso">in corso</option>
+            <option value="part time">part time</option>
+            <option value="ripetente">riptetente</option>
+        </datalist>
+        
+
+        <br><br> 
+
+        <label for="richieste"> Richieste</label> <br>
+        <textarea cols="60" rows="12" name="richieste" id="richieste" placeholder="fai una richiesta"> </textarea>
+
+        <br>
+
+        
+        
+        
+        <button type="submit" name="submitForm" form="es1"> Submit</button>
+        <button type="reset" value="reset" name="resetForm"  form="es1"> Reset </button>
+
+    </form>
+</body>
+
+</html>
