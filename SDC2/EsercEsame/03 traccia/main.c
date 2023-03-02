@@ -5,6 +5,7 @@
 #include "common.h"
 
 int pipefd[2];
+int ret;
 
 int write_to_pipe(int fd, const void *data, size_t data_len) {
     
@@ -19,7 +20,12 @@ int write_to_pipe(int fd, const void *data, size_t data_len) {
      * - assicurarsi che tutti i 'data_len' byte siano stati scritti
      * - restituire il numero di bytes scritti
      **/
-    
+    while(written_bytes < data_len){
+        int ret = write(fd,data + written_bytes,data_len - written_bytes );
+        if(ret == -1 || errno == EINTR) continue;
+        if(ret == -1) handle_error("Error reading from pipe");
+        written_bytes += ret;
+    }
     return written_bytes; 
 }
 
@@ -28,6 +34,7 @@ int read_from_pipe(int fd, void *data, size_t data_len) {
     int read_bytes = 0;
     
     /**
+        
      * COMPLETARE QUI
      * 
      * Obiettivi:
@@ -37,6 +44,17 @@ int read_from_pipe(int fd, void *data, size_t data_len) {
      * - assicurarsi che tutti i 'data_len' bytes siano stati letti
      * - restituire il numero di bytes letti
      **/
+    do
+    {
+        int ret = read(fd,data + read_bytes,data_len - read_bytes );
+        if(ret == -1 || errno == EINTR) continue;
+        if(ret == -1) handle_error("Error reading from pipe");
+        if(ret == 0) break;
+        read_bytes += ret;
+    } while (read_bytes < data_len);
+    
+
+
 
     return read_bytes;
 }
@@ -85,6 +103,31 @@ void child(int child_id, sem_t* named_semaphore) {
      * - infine, chiudere i descrittori rimanenti ed il named semaphore
      * - gestire eventuali errori
      **/
+
+    ret = close(pipefd[0]);
+     if(ret < 0) handle_error("Error closing read pipe descriptor");
+
+    for (int i = 0; i < MSG_COUNT; i++)
+    {
+        create_msg(data,MSG_SIZE,i);
+        
+        ret = sem_wait(named_semaphore);
+        if(ret < 0) handle_error("Error wait named semaphore");
+
+        ret = write_to_pipe(pipefd[1],data,MSG_SIZE * sizeof(int));
+        
+        ret = sem_post(named_semaphore);
+        if(ret < 0) handle_error("Error post named semaphore");
+        printf("Process %d sent msg #%d\n", child_id, i);
+
+    }
+    
+    ret = close(pipefd[1]);
+     if(ret < 0) handle_error("Error closing write pipe descriptor");
+
+
+    ret = sem_close(named_semaphore);
+     if(ret < 0) handle_error("Error closing named semaphore");
     
 }
 
@@ -109,6 +152,33 @@ void parent() {
      * - gestire eventuali errori
      **/
      
+     ret = close(pipefd[1]);
+     if(ret < 0) handle_error("Error closign write pipe descriptor");
+
+        for (int i = 0; i < CHILDREN_COUNT*MSG_COUNT; i++)
+        {
+            ret = read_from_pipe(pipefd[0],data,MSG_SIZE * sizeof(int));
+        printf("Main process received msg #%d from process %d\n", i, data[0]);
+
+            if(!is_msg_ok(data,MSG_SIZE) ){
+                handle_error("Error reading message from pipe");
+
+            }
+        }
+        
+
+     ret = close(pipefd[0]);
+     if(ret < 0) handle_error("Error closign read pipe descriptor");
+
+     for (int i = 0; i < CHILDREN_COUNT; i++)
+     {
+        ret = wait(NULL);
+        if(ret < 0) handle_error("Error wait child process to end");
+     }
+
+     ret = sem_unlink(SEMAPHORE_NAME);
+    if(ret < 0) handle_error("Error unlinking named  semaphore");
+     
 }
 
 int main(int argc, char* argv[]) {
@@ -131,5 +201,33 @@ int main(int argc, char* argv[]) {
      * - gestire eventuali errori
      **/
     
+
+    sem_unlink(SEMAPHORE_NAME);
+
+    sem_t * s = sem_open(SEMAPHORE_NAME,O_CREAT | O_EXCL,0666,1);
+    if(s == SEM_FAILED) handle_error("Error opening named semaphore");
+
+    ret = pipe(pipefd);
+    if(ret < 0) handle_error("Error creating pipe");
+
+    for (int i = 0; i < CHILDREN_COUNT; i++)
+    {
+        ret = fork();
+        if(ret == -1){
+            handle_error("Error creating child processes");
+            exit(EXIT_FAILURE);
+        }
+        if(ret == 0){
+            child(i,s);
+            _exit(0);
+        }
+    }
+
+    ret = sem_close(s);
+    if(ret < 0) handle_error("Error closing semaphore");
+    
+    parent();
+
+
     return EXIT_SUCCESS;
 }

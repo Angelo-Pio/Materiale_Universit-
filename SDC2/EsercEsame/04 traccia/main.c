@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 
 #include "common.h"
-
+int ret;
 void send_over_pipe(int write_desc, char* buf, size_t data_len) {
 
 	/**
@@ -14,6 +14,14 @@ void send_over_pipe(int write_desc, char* buf, size_t data_len) {
      * - gestire eventuali interruzioni ed errori
      * - assicurarsi che tutti i byte siano stati scritti
      */
+    int written_bytes = 0;
+    while(written_bytes < data_len){
+        int ret = write(write_desc,buf + written_bytes,data_len - written_bytes );
+        if(ret == -1 && errno == EINTR) continue;
+        if(ret == -1) handle_error("Error reading from pipe");
+        written_bytes += ret;
+    }
+    
 
 }
 
@@ -32,6 +40,20 @@ int read_from_pipe(int read_desc, char* buf, size_t buf_len) {
      *
      * Il delimitatore di fine messaggio è il terminatore di riga '\n'.
 	 **/
+
+    int read_bytes = 0;
+    do
+    {
+        int ret = read(read_desc,buf + read_bytes,1);
+        if(ret == -1 && errno == EINTR) continue;
+        if(ret == -1) handle_error("Error reading from pipe");
+        
+        if(ret == 0) handle_error_en(-1,"Error pipe close");
+        if(ret == buf_len) handle_error("message too big");
+
+    } while (buf[read_bytes++] != '\n');
+
+    return read_bytes;
 
 }
 
@@ -86,6 +108,40 @@ int main(int argc, char* argv[]) {
      * - gestire eventuali errori
      */
 
+    int pipe1[2];
+    int pipe2[2];
 
+    ret = pipe(pipe1);
+    if(ret < 0) handle_error("Error creating pipe1");
+    ret = pipe(pipe2);
+    if(ret < 0) handle_error("Error creating pipe2");
+
+    int pid = fork();
+    if(pid == -1){
+        handle_error("Error creating child process");
+    }
+    if(pid == 0){
+        close(pipe1[0]);
+        close(pipe2[1]);
+
+        child_loop(pipe1[1],pipe2[0]);
+
+        close(pipe1[1]);
+        close(pipe2[0]);
+
+        _exit(0);
+    }
+
+    close(pipe1[1]);
+    close(pipe2[0]);
+
+    parent_loop(pipe1[0],pipe2[1]);
+
+
+    int status;
+    wait(status);
+
+    close(pipe1[0]);
+    close(pipe2[1]);
     return 0;
 }

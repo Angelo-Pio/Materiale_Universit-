@@ -74,6 +74,30 @@ int main(int argc, char* argv[]) {
      *  
      * */
     int counters[THREADS];
+
+
+    int s = 0;
+    pthread_t threads[THREADS];
+    for (int i = 0; i < THREADS; i++)
+    {
+        thread_args_t * args_t = (thread_args_t *) malloc(sizeof(thread_args_t));
+        args_t->counter=counters + i;
+        args_t->array = array;
+        args_t->item = item;
+        args_t->start = s;
+        s += STEP;
+        args_t->end = s;
+        int ret = pthread_create(&threads[i],0,thread_routine,args_t);
+        if(ret < 0 ) handle_error("Error creating threads");
+    }
+    
+    for (int i = 0; i < THREADS; i++)
+    {
+        int ret = pthread_join(threads[i],NULL);
+        if(ret < 0 ) handle_error("Error joining threads");
+
+    }
+    
     
     
     
