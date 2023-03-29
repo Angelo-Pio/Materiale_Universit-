@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Web Storage & DOM</title>
+    <script src="script.js" type="text/javascript"></script>
+</head>
+
+<body onload="addEventHandlers()">
+    <div style="margin: 10px; border-color: black; border-width: 2px; border-style: solid;">
+        <div>
+
+            <form name="userForm" action="#" method="get" onsubmit="storeUser()">
+
+                <input type="text" size="30" maxlength="30" name="nome" placeholder="nome"><br>
+                <input type="text" size="40" maxlength="40" name="cognome" placeholder="cognome"><br>
+                <input type="text" size="12" maxlength="12" name="matricola" placeholder="matricola"><br>
+
+                <button type="submit" name="submit"> Submit </button>
+                <button type="reset" name="reset"> Reset </button>
+                <button type="button" name="print" onclick="printUsers()"> Print Users </button>
+                <button type="button" name="delete" onclick="clearStorage()"> Clear Storage <button>
+
+
+            </form>
+        </div>
+
+        <br>
+        <br>
+
+        <table id="user_table">
+            <thead>
+
+                <th>
+                    <tr> Nome </tr>
+                    <tr> Cognome </tr>
+                    <tr> Matricola </tr>
+
+                </th>
+            </thead>
+            <tbody name="user_table_body">
+
+            </tbody>
+
+        </table>
+    </div>
+
+    <div style=" border-style: solid; border-color: black; margin: 10px; " name="es2" >
+        <h3>Esercizio 2</h3>
+
+        <div>
+            <p class="c1"> Example: default backgroud: grey  onhover: red </p>
+        </div>
+        
+        <span class="c2"> Turn green </span>
+
+    </div>
+
+</body>
+
+</html>
