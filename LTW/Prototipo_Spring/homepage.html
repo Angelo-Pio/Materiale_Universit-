@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spring e-commerce</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100">
+
+
+
+  <!-- navbar -->
+
+  <nav th:fragmnet="navbar" id="header" class="w-full z-30 top-10 py-1 bg-gray-700 shadow-lg border-b border-grey-400 ">
+    <div class="w-full flex items-center justify-between mt-0 px-6 py-2">
+      <label for="menu-toggle" class="cursor-pointer md:hidden block">
+        <svg class="fill-current text-blue-600" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+          viewBox="0 0 20 20">
+          <title>menu</title>
+          <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"></path>
+        </svg>
+      </label> <input class="hidden" type="checkbox" id="menu-toggle">
+
+      <div class="hidden md:flex md:items-center md:w-auto w-full order-3 md:order-1" id="menu">
+        <nav>
+          <ul class="md:flex items-center justify-between text-base text-white pt-4 md:pt-0">
+            <li><a class="inline-block no-underline hover:text-black font-medium text-lg py-2 px-4 lg:-ml-2"
+                href="#">Home</a></li>
+
+            <!-- only for users logged in -->
+            <li><a class="inline-block no-underline hover:text-black font-medium text-lg py-2 px-4 lg:-ml-2"
+                href="#">Orders</a></li>
+            <li><a class="inline-block no-underline hover:text-black font-medium text-lg py-2 px-4 lg:-ml-2"
+                href="#">Cart</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- User not logged in -->
+      <div class="order-2 md:order-3 flex flex-wrap items-center justify-end mr-0 md:mr-4" id="nav-content">
+        <div class="auth flex items-center w-full md:w-full">
+          <button
+            class="bg-transparent text-white  p-2 rounded-lg border border-gray-300 mr-4 hover:bg-gray-100 hover:text-gray-700">Sign
+            in</button>
+          <button class="bg-blue-600 text-white p-2 rounded-lg  hover:bg-blue-500 hover:text-gray-100">Sign
+            up</button>
+        </div>
+      </div>
+        <!-- User logged in -->
+
+
+
+      
+
+
+
+    </div>
+  </nav>
+
+  <div class="rounded-lg bg-slate-100 border-black m-10 b-10 p-10 border-solid shadow-md">
+
+    <!-- Products  -->
+    <div th:fragment="products_table" class="max-w-screen-lg mx-auto mb-20">
+      <div class="flex flex-col">
+        <div class="overflow-x-auto shadow-md sm:rounded-lg">
+          <div class="inline-block min-w-full align-middle">
+            <div class="overflow-hidden ">
+              <form name="addToCartForm" action="#" method="get">
+
+                <table class="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-700">
+                  <thead class="bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                      <th scope="col" class="pt-4"></th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Product Name</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Description</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Category</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Cost</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Availability</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                        Quantity</th>
+                      <th scope="col"
+                        class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      </th>
+
+
+                      <!-- <th scope="col" class="p-4"><span class="sr-only">Edit</span> </th> -->
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    <tr th:each="p : ${products}" class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <td class="p-4 w-4">
+                        <input name="user_id" type="hidden" th:value="">
+                        <input name="product_id" type="hidden" th:value="">
+                      </td>
+                      <td th:text="${p.name}"
+                        class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Name
+                        <input name="product_name" type="hidden" th:value="">
+                      </td>
+                      <td th:text="${p.description}"
+                        class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        Description</td>
+                      <td th:text="${p.category}"
+                        class="py-4 px-6 text-sm font-medium text-gray-500 whitespace-nowrap dark:text-white">Category
+                      </td>
+
+                      <td th:text="${p.cost}"
+                        class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Cost
+
+                        <input name="product_cost" type="hidden" th:value="">
+
+                      </td>
+                      <td th:text="${p.quantity}"
+                        class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Available
+                      </td>
+                      <td th:text=""
+                        class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-black">
+                        <input name="product_quantity" type="number" width="1" size="5" placeholder="0" min="0"
+                          th:max="${p.quantity}">
+                      </td>
+                      <!-- <td
+											class="py-4 px-6 text-sm font-medium text-right whitespace-nowrap">
+											<a href="#"
+											class="text-blue-600 dark:text-blue-500 hover:underline">Edit</a> 
+									</td>-->
+                      <td>
+
+
+                        <input type="submit"
+                          class="bg-gray-800 text-gray-200 p-1 px-2 rounded-lg border border-gray-300 p-0 mr-4 hover:bg-blue-500 hover:text-white"
+                          value="+">
+                      </td>
+
+                    </tr>
+
+                  </tbody>
+                </table>
+
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Cart -->
+
+    <div th:fragment="table" class="max-w-fit mx-auto mb-20">
+      <div class="flex flex-col">
+        <div class="overflow-x-auto shadow-md sm:rounded-lg">
+          <div class="inline-block min-w-full align-middle">
+            <div class="overflow-hidden ">
+              <table class="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th scope="col" class="p-4"></th>
+                    <th scope="col"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Product Name</th>
+
+                    <th scope="col"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Cost</th>
+
+                    <th scope="col"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Quantity</th>
+
+
+                    <!-- <th scope="col" class="p-4"><span class="sr-only">Edit</span> </th> -->
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                  <tr th:each="p : ${products}" class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <td class="p-4 w-4"></td>
+                    <td th:text="${p.name}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Name</td>
+                    <td th:text="${p.cost}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Cost</td>
+                    <td th:text="${p.quantity}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Quantity
+                    </td>
+
+                    <!-- <td
+											class="py-4 px-6 text-sm font-medium text-right whitespace-nowrap">
+											<a href="#"
+											class="text-blue-600 dark:text-blue-500 hover:underline">Edit</a> 
+									</td>-->
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Order -->
+    <div th:fragment="table" class="max-w-fit mx-auto mb-20">
+      <div class="flex flex-col">
+        <div class="overflow-x-auto shadow-md sm:rounded-lg">
+          <div class="inline-block min-w-full align-middle">
+            <div class="overflow-hidden ">
+              <table class="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th scope="col" class="p-4"></th>
+                    <!-- go to order details -->
+                    <th scope="col" href="details"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Order</th>
+
+                    <th scope="col"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Placed At</th>
+
+
+                    <th scope="col"
+                      class="py-3 px-6 text-xs font-medium tracking-wider text-left text-gray-700 uppercase dark:text-gray-400">
+                      Total</th>
+
+
+                    <!-- <th scope="col" class="p-4"><span class="sr-only">Edit</span> </th> -->
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                  <tr th:each="p : ${products}" class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <td class="p-4 w-4"></td>
+                    <td th:text="${p.name}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Order</td>
+                    <td th:text="${p.cost}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Placed_at
+                    </td>
+                    <td th:text="${p.quantity}"
+                      class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">Total</td>
+
+                    <!-- <td
+											class="py-4 px-6 text-sm font-medium text-right whitespace-nowrap">
+											<a href="#"
+											class="text-blue-600 dark:text-blue-500 hover:underline">Edit</a> 
+									</td>-->
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+
+  </div>
+</body>
+
+</html>
