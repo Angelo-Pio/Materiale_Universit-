@@ -311,7 +311,8 @@ int botExists(int bot_id)
 }
 
 /*
- * Instanciate TCP connection in order to track current bots -> another fork?
+ * Instanciate TCP connection in order to track current bots -> another fork? 
+ * use libcurl 
  * email -> send array of email addresses, content
  * HTTP_REQ -> send http request as string "e.g curl ..."
  * SYS_INFO -> nothing
