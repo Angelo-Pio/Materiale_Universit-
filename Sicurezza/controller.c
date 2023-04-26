@@ -47,6 +47,7 @@ int main(int argc, char const *argv[])
 
     ret = initializeSemaphores();
 
+
     struct sockaddr_in server_addr = {0}, client_addr = {0};
     int sockaddr_len = sizeof(struct sockaddr_in);
 
@@ -272,7 +273,7 @@ void sendCommand(char *command, int bot_id)
         char bot_ip[INET_ADDRSTRLEN];
         long bot_port; //TODO this should be extracted from bot structure
 
-        //TODO write a function that fill bot_id and bot_ip
+        //TODO write a function that fill bot_id and bot_ip side effect
 
         // inet_ntop(AF_INET, &(bot->bot_address.sin_addr), bot_ip, INET_ADDRSTRLEN);
 
@@ -419,22 +420,11 @@ void child()
     while (1)
     {
 
-        // bot_fd = accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&sockaddr_len);
-        // if (bot_fd < 0)
-        //     handle_error("Cannot open socket for incoming connection");
+        /*
 
-        // // invoke the connection_handler() method to process the request
-        // fprintf(stderr, "Incoming connection accepted...\n");
+        ricevi richieste http in cui viene specificato l'ip del bot e la sua porta, oppure estrai quest info
 
-        // /*
 
-        //     sem_post
-        //     storeBot
-        //     sem_wait
-        // */
-
-        // // connection_handler(bot_fd);
-
-        // fprintf(stderr, "Done!\n");
+        */
     }
 }
