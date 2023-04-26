@@ -15,7 +15,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <semaphore.h>
-#include "concurrency.h"
+#include <signal.h>
+#include <curl/curl.h>
 
 // macros for handling errors
 #define handle_error_en(en, msg) \
@@ -33,7 +34,7 @@
     } while (0)
 
 /* Configuration parameters */
-#define DEBUG 1          // display debug messages
+#define DEBUG 0          // display debug messages
 #define MAX_CONN_QUEUE 5 // max number of connections the server can queue
 #define SERVER_ADDRESS "127.0.0.1"
 #define QUIT "QUIT\n"
@@ -43,7 +44,7 @@
 #define SYS_INFO "sys_info\n"
 #define HTTP_REQ "http_req\n"
 
-typedef struct
+typedef struct bot
 {
     int bot_id;
     unsigned short int ports[3];
@@ -52,7 +53,7 @@ typedef struct
     // If these two fields are not null the bot is active else not
     struct in_addr target_address;
     char action[10];
-    struct active_bots *next;
+    struct bot *next;
 } active_bots;
 
 
