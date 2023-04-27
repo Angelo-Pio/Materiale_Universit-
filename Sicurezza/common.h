@@ -18,7 +18,10 @@
 #include <signal.h>
 #include <curl/curl.h>
 #include <microhttpd.h>
-
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 // macros for handling errors
 #define handle_error_en(en, msg) \
     do                           \
@@ -49,6 +52,7 @@
 #define PROTOCOL "http://"
 #define MAX_REQ_SIZE 1000
 #define HTTP_REQ_ENDPOINT "/http_req?request="
+#define SHM_NAME "/botnet"
 
 
 typedef struct bot
