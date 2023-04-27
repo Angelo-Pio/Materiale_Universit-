@@ -44,13 +44,14 @@
 #define EMAIL "email\n"
 #define SYS_INFO "sys_info\n"
 #define HTTP_REQ "http_req\n"
+#define C_PORT "C_PORT"
+#define C_IP "C_IP"
 
 typedef struct bot
 {
     int bot_id;
-    unsigned short int ports[3];
-    struct sockaddr_in bot_address; // in_addr ?
-
+    long port;
+    struct in_addr bot_address; // in_addr ?
     // If these two fields are not null the bot is active else not
     struct in_addr target_address;
     char action[10];
