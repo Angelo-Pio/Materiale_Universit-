@@ -46,6 +46,10 @@
 #define HTTP_REQ "http_req\n"
 #define C_PORT "PORT"
 #define C_IP "IP"
+#define PROTOCOL "http://"
+#define MAX_REQ_SIZE 1000
+#define HTTP_REQ_ENDPOINT "/http_req?request="
+
 
 typedef struct bot
 {

