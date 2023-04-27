@@ -18,10 +18,7 @@
 #include <signal.h>
 #include <curl/curl.h>
 #include <microhttpd.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <pthread.h>
 // macros for handling errors
 #define handle_error_en(en, msg) \
     do                           \
