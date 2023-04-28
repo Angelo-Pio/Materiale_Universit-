@@ -9,6 +9,7 @@
         "common.h": "c",
         "unistd.h": "c",
         "curl.h": "c",
-        "controller.h": "c"
+        "controller.h": "c",
+        "string.h": "c"
     }
 }
