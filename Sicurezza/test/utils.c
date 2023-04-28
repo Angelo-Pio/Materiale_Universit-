@@ -325,8 +325,8 @@ int setBotInfo(long *bot_port, char *bot_ip, int bot_id)
         if (bot->bot_id == bot_id)
         {
 
-            bot_port = &(bot->port);
-            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, sizeof(bot->bot_address));
+            *bot_port = bot->port;
+            inet_ntop(AF_INET, &(bot->bot_address), bot_ip, INET_ADDRSTRLEN);
 
             res = 1;
             break;
@@ -372,7 +372,7 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
         {
 
             
-            printf("%s",target_ip);
+            // printf("%s",target_ip);
 
             ret = inet_pton(AF_INET, target_ip, &(bot->target_address));
             if(ret == 0){printf("Could not register address\n");}

