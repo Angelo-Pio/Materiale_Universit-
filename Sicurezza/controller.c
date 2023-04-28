@@ -23,9 +23,9 @@
 
 // BOT -> Critical section
 
-active_bots *botnet = NULL; // Shared memory!
+active_bots *botnet = NULL; 
 sem_t r, w;
-int readcount, ret, fd_shm;
+int readcount, ret;
 struct MHD_Daemon *mhd_daemon;
 
 int botExists(int bot_id);
@@ -449,11 +449,7 @@ int closeSemaphores()
     if (ret < 0)
         handle_error("Cannot close sem w");
 
-    close(fd_shm);
-    if (munmap(botnet, sizeof(active_bots)))
-        ;
-    if (shm_unlink(SHM_NAME))
-        handle_error("errore SHM_UNLINK");
+   
 
     return ret;
 }
