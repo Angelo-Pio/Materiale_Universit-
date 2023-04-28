@@ -271,6 +271,9 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     struct in_addr address;
     inet_pton(AF_INET, bot_ip, &(address));
 
+
+    // TODO get updates from bots
+
     if (findBot(address, port) == -1)
     {
 

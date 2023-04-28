@@ -38,7 +38,6 @@
 /* Configuration parameters */
 #define DEBUG 0          // display debug messages
 #define MAX_CONN_QUEUE 5 // max number of connections the server can queue
-#define SERVER_ADDRESS "127.0.0.1"
 #define QUIT "QUIT\n"
 #define SERVER_PORT 8888
 #define LIST "list\n"
