@@ -37,6 +37,7 @@
 #define PROTOCOL "http://"
 #define CONTROLLER_PORT 8081L
 #define CONTROLLER_IP "127.0.1.1"
+#define CONTROLLER_NOTIFY_ENDPOINT "http://127.0.1.1/notify?IP="
 
 
 void setBotIP();
@@ -45,7 +46,8 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls);
 int sendRequestToTarget(const char* request);
-int sendSystemInfo(char * info);
+int getSystemInfo(char * info);
+void notifyController();
 
 
 #endif

