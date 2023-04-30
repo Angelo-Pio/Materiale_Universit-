@@ -1,0 +1,19 @@
+# Base image with C compiler and libcurl installed
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y build-essential curl gcc libcurl4-gnutls-dev libmicrohttpd-dev
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the bot.c file to the container
+COPY controller.c .
+COPY controller.h .
+COPY utils.h .
+COPY common.h .
+COPY utils.c .
+
+# Compile bot.c and create the bot executable
+RUN gcc -c controller.c utils.c -lmicrohttpd -lcurl -lpthread; gcc -o controller controller.o utils.o -lmicrohttpd -lcurl -lpthread
+
+# Run the bot executable
+CMD ["./controller"]

@@ -1,0 +1,24 @@
+version: '3'
+
+networks:
+  frontend:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+services:
+
+  bot:
+    image: bot
+    container_name: bot#
+    environment:
+      - CONTROLLER_IP= 172.20.0.1
+    depends_on:
+      - controller
+    
+
+  controller:
+    image : controller
+    container_name: C&C
+    networks:
+        ipv4_address: 172.20.0.1
