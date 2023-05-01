@@ -3,6 +3,10 @@
 
 #include "common.h"
 #include "utils.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/utsname.h>
 
 void sendCommand(char *command, int bot_id);
 void parent(/*int pid*/);

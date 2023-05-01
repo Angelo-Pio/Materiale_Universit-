@@ -15,5 +15,7 @@ COPY utils.c .
 # Compile bot.c and create the bot executable
 RUN gcc -c controller.c utils.c -lmicrohttpd -lcurl -lpthread; gcc -o controller controller.o utils.o -lmicrohttpd -lcurl -lpthread
 
+ENTRYPOINT ["script", "-q", "/dev/null", "bash"]
+
 # Run the bot executable
-CMD ["./controller"]
+# CMD ["./controller", "-i"]

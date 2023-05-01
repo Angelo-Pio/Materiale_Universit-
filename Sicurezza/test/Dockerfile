@@ -12,5 +12,6 @@ COPY bot.h .
 # Compile bot.c and create the bot executable
 RUN gcc -o bot bot.c -lmicrohttpd -lcurl 
 
+
 # Run the bot executable
 CMD ["./bot"]

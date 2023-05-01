@@ -9,16 +9,25 @@ networks:
 services:
 
   bot:
-    image: bot
-    container_name: bot#
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # container_name: bot
     environment:
-      - CONTROLLER_IP= 172.20.0.1
+      - CONTROLLER_IP=172.20.0.2
     depends_on:
       - controller
-    
+    networks:
+      frontend:
+
 
   controller:
-    image : controller
-    container_name: C&C
+    build:
+      context: .
+      dockerfile: ControllerDockerfile
+    # container_name: controller
+    ports:
+      - 8081
     networks:
-        ipv4_address: 172.20.0.1
+      frontend:
+        ipv4_address: 172.20.0.2
