@@ -17,15 +17,22 @@ services:
       - CONTROLLER_IP=172.20.0.2
     depends_on:
       - controller
+    tty: true
+    stdin_open: true
+    # command: bash
     networks:
       frontend:
+    
 
 
   controller:
     build:
       context: .
       dockerfile: ControllerDockerfile
-    # container_name: controller
+    container_name: controller
+    tty: true
+    stdin_open: true
+    command: bash
     ports:
       - 8081
     networks:

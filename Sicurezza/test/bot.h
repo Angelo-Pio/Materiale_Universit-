@@ -48,6 +48,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 int sendRequestToTarget(const char* request);
 int getSystemInfo(char * info);
 void notifyController();
-
+void setBotPort();
 
 #endif

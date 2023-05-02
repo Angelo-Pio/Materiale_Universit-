@@ -371,9 +371,8 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
     {
         if (bot->bot_id == bot_id)
         {
-
             
-            if(strcmp(target_ip,"") == 0){
+            if(strcmp(target_ip,"void") == 0){
 
                 ret = inet_pton(AF_INET, "0.0.0.0", &(bot->target_address));
                 
@@ -383,8 +382,15 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
 
             }
 
-            if(ret == 0){printf("Could not register address\n");}
-            strcpy(bot->action, command);
+            if(ret == 0){printf("Not a valid address\n"); break;}
+
+            if(strcmp(command,"void") == 0){
+
+                strcpy(bot->action, "\0");
+            }else{
+
+                strcpy(bot->action, command);
+            }
 
             break;
         }
