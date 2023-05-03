@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <semaphore.h>
+#include<netdb.h>	//hostent
 #include <signal.h>
 #include <curl/curl.h>
 #include <microhttpd.h>

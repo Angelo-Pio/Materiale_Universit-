@@ -320,7 +320,6 @@ void setBotPort(){
     printf("Free port: %ld\n", port);
 
     close(sockfd);
-    return 0;
 
 
 }

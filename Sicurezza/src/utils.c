@@ -473,3 +473,26 @@ int getBotID(const char * bot_ip, const char * bot_port ){
     return res;
 
 }
+
+int fromHostnameToIp(char * target_ip, char * hostname){
+
+    struct hostent *he;
+	struct in_addr **addr_list;
+	int i;
+		
+	if ( (he = gethostbyname( hostname ) ) == NULL) 
+	{
+		// get the host info
+		printf("\nNot valid hostname");
+		return -1;
+	}
+
+	addr_list = (struct in_addr **) he->h_addr_list;
+	
+    inet_ntop(AF_INET,addr_list[0],target_ip,INET_ADDRSTRLEN);
+    printf("\n Target ip : %s \n", target_ip);
+	
+	return 1;
+
+
+}

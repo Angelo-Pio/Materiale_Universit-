@@ -208,11 +208,31 @@ void sendCommand(char *command, int bot_id)
             return;
         }
 
-        printf("\nSubmit target's ip in dot decimal notation: ");
+        printf("\n Do you want insert target.s ip by hostname? [Y,n]\n");
+        char byHostName[3] = {0};
+        fgets(byHostName, sizeof(char)*3, stdin);
+        fflush(stdin);
 
-        fgets(target_ip, sizeof(target_ip), stdin);
+        if(strcmp(byHostName,"n\n") == 0){
+            printf("\nSubmit target's ip in dot decimal notation:");
+            fgets(target_ip, sizeof(target_ip), stdin);
+            fflush(stdin);
+        }else{
+            printf("\nSubmit target's hostname: ");
+            char hostname[255] = {0};
+            fflush(stdin);
+            fgets(hostname, sizeof(char) * 255, stdin);
+            hostname[strcspn(hostname, "\n")] = 0;
+            if(fromHostnameToIp(target_ip,hostname) < 0 ){
+                printf("Could not send command, wrong hostname");
+                return ;
+            }
+            
+        }
+        
 
-        target_ip[strcspn(target_ip, "n")] = 0;
+
+        target_ip[strcspn(target_ip, "\n")] = 0;
 
         updateBotInfo(bot_id, target_ip, command);
 
@@ -260,6 +280,8 @@ void sendCommand(char *command, int bot_id)
         }
 
         res = curl_easy_perform(curl);
+
+        
         curl_easy_cleanup(curl);
     }
 }
