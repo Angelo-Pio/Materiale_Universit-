@@ -152,7 +152,7 @@ void child()
 
     const union MHD_ConnectionInfo *conninfo;
 
-    mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
+    mhd_daemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, 8081, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
     if (mhd_daemon == NULL)
     {
         fprintf(stderr, "Error starting daemon.n");
