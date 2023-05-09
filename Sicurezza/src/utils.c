@@ -52,6 +52,10 @@ int list_botnet(int active)
     char *bot_ip = (char *)malloc(sizeof(INET_ADDRSTRLEN));
     while (bot != NULL)
     {
+        if(bot->bot_id == 0){
+            bot = bot->next;
+            continue;
+        }
         if (active == 1)
         {
 
@@ -370,7 +374,6 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
 
             if (strcmp(target_ip, "void") == 0)
             {
-
                 ret = inet_pton(AF_INET, "0.0.0.0", &(bot->target_address));
             }
             else
@@ -408,10 +411,9 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
     }
 }
 
-int getBotID(const char *bot_ip, const char *bot_port)
+void getBotID(const char *bot_ip, const char *bot_port, int * bot_id)
 {
 
-    int res = -1;
     int ret = sem_wait(&r);
     if (ret < 0)
     {
@@ -438,22 +440,25 @@ int getBotID(const char *bot_ip, const char *bot_port)
 
     active_bots *bot = botnet;
 
+    *bot_id = -1;
     while (bot != NULL)
     {
+        
         char ip[INET_ADDRSTRLEN] = {0};
-        char port[sizeof(char) * 5] = {0};
+        char port[6] = {0};
 
         inet_ntop(AF_INET, &(bot->bot_address), ip, INET_ADDRSTRLEN);
-        sprintf(port, "%ld", bot->port);
+        snprintf(port, sizeof(port), "%ld", bot->port);
 
         if (strcmp(ip, bot_ip) == 0 && strcmp(port, bot_port) == 0)
         {
 
-            res = bot->bot_id;
+            *bot_id = bot->bot_id;
             break;
         }
         bot = bot->next;
     }
+
 
     ret = sem_wait(&r);
     if (ret < 0)
@@ -473,7 +478,6 @@ int getBotID(const char *bot_ip, const char *bot_port)
         handle_error("Error in post sem r");
     }
 
-    return res;
 }
 
 int fromHostnameToIp(char *target_ip, char *hostname)
