@@ -12,4 +12,5 @@ int findBot(struct in_addr, long port);
 int setBotInfo(long *bot_port, char *bot_ip, int bot_id);
 void updateBotInfo(int bot_id, const char *target_ip,const  char *command);
 int fromHostnameToIp(char * target_ip, char * hostname);
+void getTargetIp(char * target_ip);
 #endif

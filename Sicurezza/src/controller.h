@@ -8,12 +8,14 @@
 #include <netdb.h>
 #include <sys/utsname.h>
 
-void sendCommand(char *command, int bot_id);
+void sendCommand(char *command, int bot_id,char * target_ip);
+void broadcastCommand(char *command, char* target_ip);
 void parent(/*int pid*/);
 void child();
 int handle_request(void *cls, struct MHD_Connection *connection, const char *url,
                    const char *method, const char *version, const char *upload_data,
                    size_t *upload_data_size, void **con_cls);
 int getBotID(const char * bot_ip, const char * bot_port );
+
 
 #endif

@@ -5,7 +5,7 @@
 #include "utils.h"
 
 sem_t r, w;
-int readcount  = 0, ret = 0;
+int readcount = 0, ret = 0;
 
 int list_botnet(int active)
 {
@@ -64,7 +64,6 @@ int list_botnet(int active)
         {
             printf("BOT_ID: %d \n", bot->bot_id);
         }
-
 
         bot = bot->next;
     }
@@ -157,7 +156,6 @@ int botExists(int bot_id)
 /*
  * Instanciate TCP connection in order to track current bots -> another fork?
  * use libcurl
- * email -> send array of email addresses, content
  * HTTP_REQ -> send http request as string "e.g curl ..."
  * SYS_INFO -> nothing
  */
@@ -187,7 +185,6 @@ int closeSemaphores()
     if (ret < 0)
         handle_error("Cannot close sem w");
 
-    
     return ret;
 }
 
@@ -358,7 +355,6 @@ int setBotInfo(long *bot_port, char *bot_ip, int bot_id)
 
 void updateBotInfo(int bot_id, const char *target_ip, const char *command)
 {
-
     int ret = sem_wait(&w);
     if (ret < 0)
     {
@@ -371,23 +367,31 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
     {
         if (bot->bot_id == bot_id)
         {
-            
-            if(strcmp(target_ip,"void") == 0){
+
+            if (strcmp(target_ip, "void") == 0)
+            {
 
                 ret = inet_pton(AF_INET, "0.0.0.0", &(bot->target_address));
-                
-            }else{
-                
-                ret = inet_pton(AF_INET, target_ip, &(bot->target_address));
+            }
+            else
+            {
 
+                ret = inet_pton(AF_INET, target_ip, &(bot->target_address));
             }
 
-            if(ret == 0){printf("Not a valid address\n"); break;}
+            if (ret == 0)
+            {
+                printf("Not a valid address\n");
+                break;
+            }
 
-            if(strcmp(command,"void") == 0){
+            if (strcmp(command, "void") == 0)
+            {
 
                 strcpy(bot->action, "\0");
-            }else{
+            }
+            else
+            {
 
                 strcpy(bot->action, command);
             }
@@ -404,7 +408,8 @@ void updateBotInfo(int bot_id, const char *target_ip, const char *command)
     }
 }
 
-int getBotID(const char * bot_ip, const char * bot_port ){
+int getBotID(const char *bot_ip, const char *bot_port)
+{
 
     int res = -1;
     int ret = sem_wait(&r);
@@ -433,17 +438,15 @@ int getBotID(const char * bot_ip, const char * bot_port ){
 
     active_bots *bot = botnet;
 
-     
-
     while (bot != NULL)
     {
-        char ip[INET_ADDRSTRLEN] = {0} ;
-        char port[sizeof(char) * 5] = {0} ;
+        char ip[INET_ADDRSTRLEN] = {0};
+        char port[sizeof(char) * 5] = {0};
 
         inet_ntop(AF_INET, &(bot->bot_address), ip, INET_ADDRSTRLEN);
-        sprintf(port,"%ld",bot->port);
+        sprintf(port, "%ld", bot->port);
 
-        if (strcmp(ip,bot_ip)  == 0 && strcmp(port,bot_port) == 0)
+        if (strcmp(ip, bot_ip) == 0 && strcmp(port, bot_port) == 0)
         {
 
             res = bot->bot_id;
@@ -471,28 +474,56 @@ int getBotID(const char * bot_ip, const char * bot_port ){
     }
 
     return res;
-
 }
 
-int fromHostnameToIp(char * target_ip, char * hostname){
+int fromHostnameToIp(char *target_ip, char *hostname)
+{
 
     struct hostent *he;
-	struct in_addr **addr_list;
-	int i;
-		
-	if ( (he = gethostbyname( hostname ) ) == NULL) 
-	{
-		// get the host info
-		printf("\nNot valid hostname");
-		return -1;
-	}
+    struct in_addr **addr_list;
+    int i;
 
-	addr_list = (struct in_addr **) he->h_addr_list;
-	
-    inet_ntop(AF_INET,addr_list[0],target_ip,INET_ADDRSTRLEN);
+    if ((he = gethostbyname(hostname)) == NULL)
+    {
+        // get the host info
+        printf("\nNot valid hostname");
+        return -1;
+    }
+
+    addr_list = (struct in_addr **)he->h_addr_list;
+
+    inet_ntop(AF_INET, addr_list[0], target_ip, INET_ADDRSTRLEN);
     printf("\n Target ip : %s \n", target_ip);
-	
-	return 1;
 
+    return 1;
+}
 
+void getTargetIp(char *target_ip)
+{
+    printf("\n Do you want insert target.s ip by hostname? [Y,n]\n");
+    char byHostName[3] = {0};
+    fgets(byHostName, sizeof(char) * 3, stdin);
+    fflush(stdin);
+
+    if (strcmp(byHostName, "n\n") == 0)
+    {
+        printf("\nSubmit target's ip in dot decimal notation:");
+        fgets(target_ip, sizeof(target_ip), stdin);
+        fflush(stdin);
+    }
+    else
+    {
+        printf("\nSubmit target's hostname: ");
+        char hostname[255] = {0};
+        fflush(stdin);
+        fgets(hostname, sizeof(char) * 255, stdin);
+        hostname[strcspn(hostname, "\n")] = 0;
+        if (fromHostnameToIp(target_ip, hostname) < 0)
+        {
+            printf("Could not send command, wrong hostname");
+            return;
+        }
+    }
+
+    target_ip[strcspn(target_ip, "")] = 0;
 }

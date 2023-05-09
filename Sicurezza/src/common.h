@@ -42,7 +42,7 @@
 #define QUIT "QUIT\n"
 #define SERVER_PORT 8888
 #define LIST "list\n"
-#define EMAIL "email\n"
+#define SELF "self"
 #define SYS_INFO "sys_info\n"
 #define HTTP_REQ "http_req\n"
 #define C_PORT "PORT"
