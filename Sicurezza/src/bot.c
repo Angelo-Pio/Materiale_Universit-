@@ -5,10 +5,14 @@ char *IP = {0};
 long port = 2324;
 int ret = 0;
 struct MHD_Daemon *mhd_daemon;
+char CONTROLLER_NOTIFY_ENDPOINT[28] ;
 
 int main(int argc, char const *argv[])
 {
-
+    strcpy(CONTROLLER_NOTIFY_ENDPOINT, "http://");
+    strcat(CONTROLLER_NOTIFY_ENDPOINT,getenv(CONTROLLER_IP));
+    strcat(CONTROLLER_NOTIFY_ENDPOINT,"/notify?IP=");
+    
     /*
      * Connect to controller and send http request like so: http://localhost:8081?PORT=2343&IP=1.2.3.2
      * then close connection and mantain connection on port specified
@@ -26,9 +30,9 @@ int main(int argc, char const *argv[])
 
         if (ret < 0)
         {
-            printf("\nConnection failed retry after 15 seconds");
+            printf("\nConnection failed retry after 10 seconds");
             fflush(stdout);
-            sleep(15);
+            sleep(10);
         }
     }
 
@@ -260,6 +264,7 @@ int getSystemInfo(char *info)
 void notifyController()
 {
 
+    
     CURL *curl;
 
     curl = curl_easy_init();

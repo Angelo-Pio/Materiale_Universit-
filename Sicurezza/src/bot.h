@@ -37,7 +37,7 @@
 #define PROTOCOL "http://"
 #define CONTROLLER_PORT 8081L
 #define CONTROLLER_IP "CONTROLLER_IP"
-#define CONTROLLER_NOTIFY_ENDPOINT "http://127.0.1.1/notify?IP="
+
 
 
 void setBotIP();
