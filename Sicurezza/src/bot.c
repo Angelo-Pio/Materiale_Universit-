@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
 
     const union MHD_ConnectionInfo *conninfo;
 
-    mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &handle_request, NULL, MHD_OPTION_END);
+    mhd_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &handle_request, NULL, NULL);
     if (mhd_daemon == NULL)
     {
         fprintf(stderr, "Error starting daemon.\n");
